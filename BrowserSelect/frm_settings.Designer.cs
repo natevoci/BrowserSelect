@@ -194,7 +194,7 @@
             // linkLabel1
             // 
             this.linkLabel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.linkLabel1.LinkArea = new System.Windows.Forms.LinkArea(247, 17);
+            this.linkLabel1.LinkArea = new System.Windows.Forms.LinkArea(205, 16);
             this.linkLabel1.Location = new System.Drawing.Point(3, 16);
             this.linkLabel1.Name = "linkLabel1";
             this.linkLabel1.Size = new System.Drawing.Size(520, 40);

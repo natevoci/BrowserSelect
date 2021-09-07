@@ -28,7 +28,7 @@ namespace BrowserSelect
             System.Diagnostics.Process.Start("Mailto:me@bor691.ir");
         }
 
-        private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void linkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             System.Diagnostics.Process.Start(((LinkLabel)sender).Text);
         }

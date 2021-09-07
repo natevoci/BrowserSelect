@@ -241,7 +241,7 @@ namespace BrowserSelect
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             // open RuleList help
-            Process.Start("https://github.com/zumoshi/BrowserSelect/blob/master/help/filters.md");
+            Process.Start("https://github.com/lucasnz/BrowserSelect/");
         }
 
         private void btn_apply_Click(object sender, EventArgs e)

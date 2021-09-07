@@ -38,6 +38,7 @@
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.lab_ver = new System.Windows.Forms.Label();
+            this.linkLabel4 = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -57,9 +58,9 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(148, 75);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(93, 65);
+            this.label2.Size = new System.Drawing.Size(236, 65);
             this.label2.TabIndex = 2;
-            this.label2.Text = "Coded By: Bor691\r\n\r\nContact me : \r\n\r\nGitHub: ";
+            this.label2.Text = "Originally coded by: Bor691, updates by: lucasnz\r\n\r\nContact me : \r\n\r\nGitHub: ";
             // 
             // linkLabel1
             // 
@@ -81,7 +82,7 @@
             this.linkLabel2.TabIndex = 4;
             this.linkLabel2.TabStop = true;
             this.linkLabel2.Text = "https://github.com/zumoshi/BrowserSelect";
-            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
+            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
             // 
             // label3
             // 
@@ -175,11 +176,23 @@
             this.lab_ver.TabIndex = 14;
             this.lab_ver.Text = "v%.%";
             // 
+            // linkLabel4
+            // 
+            this.linkLabel4.AutoSize = true;
+            this.linkLabel4.Location = new System.Drawing.Point(192, 144);
+            this.linkLabel4.Name = "linkLabel4";
+            this.linkLabel4.Size = new System.Drawing.Size(209, 13);
+            this.linkLabel4.TabIndex = 15;
+            this.linkLabel4.TabStop = true;
+            this.linkLabel4.Text = "https://github.com/lucasnz/BrowserSelect";
+            this.linkLabel4.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
+            // 
             // frm_About
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(464, 441);
+            this.Controls.Add(this.linkLabel4);
             this.Controls.Add(this.lab_ver);
             this.Controls.Add(this.btn_close);
             this.Controls.Add(this.btn_bitcoin_copy);
@@ -224,5 +237,6 @@
         private System.Windows.Forms.Button btn_bitcoin_copy;
         private System.Windows.Forms.Button btn_close;
         private System.Windows.Forms.Label lab_ver;
+        private System.Windows.Forms.LinkLabel linkLabel4;
     }
 }
