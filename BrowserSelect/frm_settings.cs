@@ -195,21 +195,27 @@ namespace BrowserSelect
         private void btn_setdefault_Click(object sender, EventArgs e)
         {
             //set browser select as default in registry
-
-            //http
-            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
-                    @"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice"))
+            Debug.WriteLine("Windows Version: {System.Environment.OSVersion.Version}");
+            //Fall Creators update introduced new default app settings  10.0.16299.19 	1709
+            if (System.Environment.OSVersion.Version.ToString().CompareTo("10.0.16299.0") > 0)
+                Process.Start("ms-settings:defaultapps");
+            else
             {
-                key.SetValue("ProgId", "bselectURL");
-            }
-            //https
-            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
-                    @"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice"))
-            {
-                key.SetValue("ProgId", "bselectURL");
-            }
+                //http
+                using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
+                        @"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice"))
+                {
+                    key.SetValue("ProgId", "bselectURL");
+                }
+                //https
+                using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
+                        @"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice"))
+                {
+                    key.SetValue("ProgId", "bselectURL");
+                }
 
-            btn_setdefault.Enabled = false;
+                btn_setdefault.Enabled = false;
+            }
         }
 
         private void browser_filter_ItemCheck(object sender, ItemCheckEventArgs e)
