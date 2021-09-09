@@ -118,14 +118,23 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="label1.Text" xml:space="preserve">
-    <value>Pattern: what URLs match the rule. you may use:
-        - a domain name (a URL without the path e.g. google.com , www.mywebsite.org)
-        - a wildcard pattern ( *.local , *.us , *.google.com , website.* )
-        - an asterisk ( * ) which will match everything
+    <value>Auto Select Filter
+"Type": The type of match.
+     - Contains: URL "contians" the pattern
+     - Matches: URL "matches" exactly the pattern
+     - Ends With: URL "ends with" the pattern
+     - Starts With: "starts with" the pattern
+     - RegEx: URL tested using the regular expression
+Note: matches are case insensitive.
+"Match": What part of the URL to match.
+     - Domain: The website domain. e.g. www.google.com
+     - URL Path: Everything after the domain, excluding any query string. e.g. /search
+     - Full URL: Includes, protocol (http/https), domain, URL Path and query string. e.g. https://www.google.com/search?q=test
+"Pattern": The pattern to Match: e.g. google.com
+"Browser": The Browser to launch when match occurs or "display browser select" to prompt user to select a browser.
+"Default Browser": The Browser to launch when no match occurs or "display browser select" to prompt user to select a browser.
 
-Browser: what happens when the pattern matches. which is either a browser to be opened automatically or "display browser select" to exclude a pattern from auto-selection.
-
-Note: you can open BrowserSelect manually from startmenu to change the Filters. BrowserSelect always opens itself when launched from startmenu regardless of Filters added.
+Note: you can open BrowserSelect manually from the start menu to change the Filters. BrowserSelect always opens itself when launched from start menu regardless of Filters added.
 
 Note 2: to Delete a rule simply select its row from left side than press " Del " key on keyboard.</value>
   </data>
