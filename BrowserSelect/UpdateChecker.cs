@@ -33,7 +33,7 @@ namespace BrowserSelect
             // request to releases/latest redirects the user to /releases/tag.
             // since tag is the version number we can get latest version from Location header
             // and make a HEAD request instead of get to save bandwidth
-            var req = (HttpWebRequest)WebRequest.Create("https://github.com/lucasnz/BrowserSelect/releases");
+            var req = (HttpWebRequest)WebRequest.Create("https://github.com/lucasnz/BrowserSelect/releases/latest");
             // make webrequest use tls 1.2 instead of ssl3 (#43)
             ServicePointManager.Expect100Continue = true;
             //ServicePointManager.SecurityProtocol = (SecurityProtocolType)768 | (SecurityProtocolType)3072;
