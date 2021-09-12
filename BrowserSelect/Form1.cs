@@ -65,18 +65,19 @@ namespace BrowserSelect
                 _alwaysRule = generate_rule(Program.url);
                 this.Text = Program.url;
             }
-            // check for new version
-            if (Settings.Default.last_version != "nope")
-            {
-                btn_help.BackgroundImage = Resources.update_available;
-                btn_help.Click -= btn_help_Click;
-                btn_help.Click += btn_update_click;
-            }
             // add vertical buttons to right of form
             buc = new ButtonsUC(this);
             this.Controls.Add(buc);
             this.updateBrowsers();
             center_me();
+        }
+
+        public void DisplayUpdate()
+        {
+            Debug.WriteLine("DisplayUpdate");
+            btn_help.BackgroundImage = Resources.update_available;
+            btn_help.Click -= btn_help_Click;
+            btn_help.Click += btn_update_click;
         }
 
         // struct used to store patterns created for Always button
@@ -325,13 +326,7 @@ namespace BrowserSelect
 
         void btn_update_click(object sender, EventArgs e)
         {
-            var lv = Settings.Default.last_version;
-            var cv = Application.ProductVersion;
-            cv = cv.Remove(cv.Length - 2);
-            MessageBox.Show(String.Format(
-                "New Update Available!\nCurrent Version: {1}\nLast Version: {0}" +
-                "\nto Update download and install the new version from project's github.",
-                lv, cv));
+            Program.UpdateDialog();
         }
     }
 }

@@ -11,12 +11,6 @@
     <Setting Name="UpdateSettings" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="check_update" Type="System.String" Scope="User">
-      <Value Profile="(Default)">nope</Value>
-    </Setting>
-    <Setting Name="last_version" Type="System.String" Scope="User">
-      <Value Profile="(Default)">nope</Value>
-    </Setting>
     <Setting Name="BrowserList" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -37,6 +31,15 @@
     </Setting>
     <Setting Name="LaunchToSettings" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="CheckForUpdates" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="LastUpdateCheck" Type="System.DateTime" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LatestVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -20,6 +19,8 @@ namespace BrowserSelect
         public static string url = "";
         public static HttpWebRequest webRequestThread = null;
         public static bool uriExpanderThreadStop = false;
+        public static string currentVer = "";
+        public static string latestVer = "";
         public static (string name, string domain)[] defaultUriExpander = new(string name, string domain)[]
             {
                 ("Outlook safe links", "safelinks.protection.outlook.com")//,
@@ -38,7 +39,6 @@ namespace BrowserSelect
             {
                 Settings.Default.Upgrade();
                 Settings.Default.UpdateSettings = false;
-                Settings.Default.last_version = "nope";
                 // to prevent nullreference in case settings file did not exist
                 if (Settings.Default.HideBrowsers == null)
                     Settings.Default.HideBrowsers = new StringCollection();
@@ -46,13 +46,7 @@ namespace BrowserSelect
                     Settings.Default.AutoBrowser = new StringCollection();
                 Settings.Default.Save();
             }
-            // check for update
-            if (Settings.Default.check_update != "nope" &&
-                DateTime.Now.Subtract(time(Settings.Default.check_update)).TotalDays > 7)
-            {
-                var uc = new UpdateChecker();
-                Task.Factory.StartNew(() => uc.check());
-            }
+            currentVer = ((Func<String, String>)((x) => x.Substring(0, x.Length - 2)))(Application.ProductVersion);
             //load URL Shortners
             string[] defultUrlShortners = new string[] {
                 "adf.ly",
@@ -81,8 +75,10 @@ namespace BrowserSelect
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Task taskForm = null;
 
             //checking if a url is being opened or app is ran from start menu (without arguments)
+            Boolean loadedBrowser = false;
             if (args.Length > 0)
             {
                 //check to see if auto select rules match
@@ -95,17 +91,33 @@ namespace BrowserSelect
                 url = uri.AbsoluteUri;
 
                 //if we loaded the browser finish execution here...
-                if (load_browser(uri))
-                    return;
+                loadedBrowser = load_browser(uri);
             }
+            Form form = null;
+            if (!loadedBrowser)
+            {
+                // display main form
+                if (url == "" && (Boolean)Settings.Default.LaunchToSettings)
+                    form = new frm_settings();
+                else
+                    form = new Form1();
+                taskForm = Task.Factory.StartNew(() =>
+                {
+                    Application.Run(form);
+                });
+            }
+            // check for update
+            //if update is available show update icon if Form1 is displayed otherwise for popup
+            if (CheckForUpdates())
+                if (form is Form1 form1 && !form1.Disposing && !form1.IsDisposed)
+                    form1.DisplayUpdate();
+                else
+                    UpdateDialog();
 
-            // display main form
-            //Application.EnableVisualStyles();
-            //Application.SetCompatibleTextRenderingDefault(false);
-            if (url == "" && (Boolean)Settings.Default.LaunchToSettings)
-                Application.Run(new frm_settings());
-            else
-                Application.Run(new Form1());
+            if (taskForm != null)
+                taskForm.Wait();
+            
+            System.Diagnostics.Debug.WriteLine("END");
         }
 
         private static Boolean load_browser(Uri uri)
@@ -172,29 +184,6 @@ namespace BrowserSelect
             }
             return false;
         }
-
-        // from : http://stackoverflow.com/a/250400/1461004
-        public static double time()
-        {
-            return time(DateTime.Now);
-        }
-        public static DateTime time(string unixTimeStamp)
-        {
-            return time(double.Parse(unixTimeStamp));
-        }
-        public static DateTime time(double unixTimeStamp)
-        {
-            // Unix timestamp is seconds past epoch
-            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
-            return dtDateTime;
-        }
-        public static double time(DateTime dateTime)
-        {
-            return (TimeZoneInfo.ConvertTimeToUtc(dateTime) -
-                   new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
-        }
-
 
         public static string Args2Str(List<string> args)
         {
@@ -309,6 +298,123 @@ namespace BrowserSelect
                     }
             }
             return uri;
+        }
+
+        public static Boolean CheckForUpdates()
+        {
+            if (Settings.Default.CheckForUpdates)
+            {
+                DateTime lastUpdateCheck;
+                // On first load LastUpdateCheck is not set, Checking for a null value didn't work
+                // So if we fail to load it, we'll set it to 1980 to force an update check
+                try
+                {
+                    lastUpdateCheck = Settings.Default.LastUpdateCheck;
+                }
+                catch
+                {
+                    lastUpdateCheck = new DateTime(1980, 1, 1, 0, 0, 0);
+                }
+                System.Diagnostics.Debug.WriteLine("lastUpdateCheck: " + lastUpdateCheck + " diff, days: " + (DateTime.Now.Subtract(lastUpdateCheck)).Days);
+                if ((DateTime.Now - lastUpdateCheck).Days >= 1)
+                {
+                    Task taskCheckUpdate = QueryUpdates();
+                    taskCheckUpdate.Wait();
+                    Settings.Default.LastUpdateCheck = DateTime.Now;
+                    Settings.Default.Save();
+                }
+                if (latestVer == "")
+                    latestVer = Settings.Default.LatestVersion;
+                //update available?
+                if (latestVer != "" && currentVer.CompareTo(latestVer) < 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static Task QueryUpdates()
+        {
+            if (currentVer == "")
+                currentVer = ((Func<String, String>)((x) => x.Substring(0, x.Length - 2)))(Application.ProductVersion);
+            Task task = Task.Factory.StartNew(() =>
+            {
+                System.Diagnostics.Debug.WriteLine("QueryUpdates");
+                // request to releases/latest redirects the user to /releases/tag.
+                // since tag is the version number we can get latest version from Location header
+                // and make a HEAD request instead of get to save bandwidth
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create("https://github.com/lucasnz/BrowserSelect/releases/latest");
+                ServicePointManager.Expect100Continue = true;
+                webRequest.Method = "HEAD";
+                webRequest.AllowAutoRedirect = false;
+                webRequest.Timeout = 2000;
+                WebResponse response = null;
+                try
+                {
+                    response = webRequest.GetResponse();
+                }
+                catch (WebException ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex);
+                }
+                if (response != null)
+                {
+                    if (response.Headers["Location"] != null)
+                    {
+                        string locationResponse = response.Headers["Location"].Split('/').Last();
+                        Boolean isNumeric = true;
+                        foreach (var num in locationResponse.Split('.'))
+                        {
+                            if (!int.TryParse(num, out _))
+                                isNumeric = false;
+                        }
+                        if (isNumeric)
+                        {
+                            latestVer = locationResponse;
+                            Settings.Default.LatestVersion = latestVer;
+                            Settings.Default.Save();
+                            #if DEBUG
+                            int verCompare = currentVer.CompareTo(latestVer);
+                            if (verCompare > 0)
+                                System.Diagnostics.Debug.WriteLine("Current version: " + currentVer + " is greater than, latest published version: " + latestVer);
+                            else if (verCompare < 0)
+                                System.Diagnostics.Debug.WriteLine("Current version: " + currentVer + " is less than, latest published version: " + latestVer);
+                            else
+                                System.Diagnostics.Debug.WriteLine("Current version: " + currentVer + " equals, latest published version: " + latestVer);
+                            #endif
+                        }
+                        else
+                        {
+                            latestVer = "";
+                            System.Diagnostics.Debug.WriteLine("Error converting version number...");
+                        }
+                    }
+                    else
+                    {
+                        latestVer = "";
+                        System.Diagnostics.Debug.WriteLine("Error retrieving version number... no location header in response.");
+                    }
+                    response.Close();
+                }
+                else
+                {
+                    latestVer = "";
+                    System.Diagnostics.Debug.WriteLine("Error retrieving version number... response null.");
+                }
+            });
+            return task;
+        }
+
+        public static void UpdateDialog()
+        {
+            DialogResult dUpdate = MessageBox.Show(String.Format(
+              "New Update Available!\nCurrent Version: {0}\nLast Version: {1}" +
+              "\nto Update download and install the new version from project's github." +
+              "\nDo you want to download the update now?",
+              currentVer, latestVer), "Updates Avaialble", MessageBoxButtons.YesNo);
+            if (dUpdate == DialogResult.Yes)
+                System.Diagnostics.Process.Start("https://github.com/lucasnz/BrowserSelect/releases/latest");
         }
 
         private static HttpWebResponse MyWebRequest(Uri uri)

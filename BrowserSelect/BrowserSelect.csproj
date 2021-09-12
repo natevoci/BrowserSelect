@@ -119,7 +119,6 @@
     <Compile Include="IconExtractor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UpdateChecker.cs" />
     <Compile Include="VButton.cs">
       <SubType>Component</SubType>
     </Compile>

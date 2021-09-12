@@ -59,30 +59,6 @@ namespace BrowserSelect.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("nope")]
-        public string check_update {
-            get {
-                return ((string)(this["check_update"]));
-            }
-            set {
-                this["check_update"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("nope")]
-        public string last_version {
-            get {
-                return ((string)(this["last_version"]));
-            }
-            set {
-                this["last_version"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string BrowserList {
             get {
@@ -160,6 +136,41 @@ namespace BrowserSelect.Properties {
             }
             set {
                 this["LaunchToSettings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool CheckForUpdates {
+            get {
+                return ((bool)(this["CheckForUpdates"]));
+            }
+            set {
+                this["CheckForUpdates"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.DateTime LastUpdateCheck {
+            get {
+                return ((global::System.DateTime)(this["LastUpdateCheck"]));
+            }
+            set {
+                this["LastUpdateCheck"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LatestVersion {
+            get {
+                return ((string)(this["LatestVersion"]));
+            }
+            set {
+                this["LatestVersion"] = value;
             }
         }
     }

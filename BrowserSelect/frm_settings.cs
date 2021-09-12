@@ -78,7 +78,7 @@ namespace BrowserSelect
                 Settings.Default.Save();
             }
 
-            chk_check_update.Checked = Settings.Default.check_update != "nope";
+            chk_check_update.Checked = Settings.Default.CheckForUpdates;
             chk_launch_settings.Checked = (Boolean)Settings.Default.LaunchToSettings;
         }
 
@@ -301,40 +301,29 @@ namespace BrowserSelect
         private void btn_check_update_Click(object sender, EventArgs e)
         {
             var btn = ((Button)sender);
-            var uc = new UpdateChecker();
             // color the button to indicate request, disable it to prevent multiple instances
             btn.BackColor = Color.Blue;
             btn.Enabled = false;
-            // run inside a Task to prevent freezing the UI
-            Task.Factory.StartNew(() => uc.check()).ContinueWith(x =>
+            // check for update
+            Task task_check_update = Program.QueryUpdates();
+            task_check_update.ContinueWith(x =>
             {
-                try
-                {
-                    if (uc.Checked)
-                    {
-                        if (uc.Updated)
-                            MessageBox.Show(String.Format(
-                                "New Update Available!\nCurrent Version: {1}\nLast Version: {0}" +
-                                "\nto Update download and install the new version from project's github.",
-                                uc.LVer, uc.CVer));
-                        else
-                            MessageBox.Show("You are running the lastest version.");
-                    }
+                if (Program.latestVer != "")
+                    if (Program.currentVer.CompareTo(Program.latestVer) < 0)
+                        Program.UpdateDialog();
                     else
-                        MessageBox.Show("Unable to check for updates.\nPlease make sure you are connected to internet.");
-                    btn.UseVisualStyleBackColor = true;
-                    btn.Enabled = true;
-                }
-                catch (Exception ex) {
-                    Debug.WriteLine(ex);
-                }
+                        MessageBox.Show("You are running the lastest version.");
+                else
+                    MessageBox.Show("Unable to check for updates.\nPlease make sure you are connected to internet.");
+                btn.UseVisualStyleBackColor = true;
+                btn.Enabled = true;
                 return x;
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void chk_check_update_CheckedChanged(object sender, EventArgs e)
         {
-            Settings.Default.check_update = (((CheckBox)sender).Checked) ? "0" : "nope";
+            Settings.Default.CheckForUpdates = ((CheckBox)sender).Checked;
             Settings.Default.Save();
         }
 
