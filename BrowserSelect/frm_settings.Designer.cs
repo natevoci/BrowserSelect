@@ -167,6 +167,7 @@
             this.cmbo_default_browser.Name = "cmbo_default_browser";
             this.cmbo_default_browser.Size = new System.Drawing.Size(130, 21);
             this.cmbo_default_browser.TabIndex = 10;
+            this.cmbo_default_browser.SelectedIndexChanged += new System.EventHandler(this.cmbo_default_browser_SelectedIndexChanged);
             // 
             // btn_cancel
             // 

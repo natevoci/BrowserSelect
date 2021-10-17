@@ -80,6 +80,7 @@ namespace BrowserSelect
 
             chk_check_update.Checked = Settings.Default.CheckForUpdates;
             chk_launch_settings.Checked = (Boolean)Settings.Default.LaunchToSettings;
+            btn_apply.Enabled = false;
         }
 
         private Boolean check_rules()
@@ -229,7 +230,7 @@ namespace BrowserSelect
             {
                 Settings.Default.HideBrowsers.Add(((Browser)browser_filter.Items[e.Index]).Identifier);
             }
-            Settings.Default.Save();
+            set_unsaved_changes();
         }
 
         private void frm_settings_FormClosing(object sender, FormClosingEventArgs e)
@@ -256,6 +257,8 @@ namespace BrowserSelect
             {
                 save_rules();
                 Settings.Default.DefaultBrowser = cmbo_default_browser.SelectedItem.ToString();
+                Settings.Default.CheckForUpdates = chk_check_update.Checked;
+                Settings.Default.LaunchToSettings = chk_launch_settings.Checked;
                 Settings.Default.Save();
                 //Enabled property of apply button is used as a flag for unsaved changes
                 btn_apply.Enabled = false;
@@ -288,8 +291,7 @@ namespace BrowserSelect
         private void gv_filters_CellBeginEdit(object sender, EventArgs e)
         {
             //set the unsaved changes flag to true
-            btn_apply.Enabled = true;
-            btn_cancel.Text = "Cancel";
+            set_unsaved_changes();
         }
 
         private void frm_settings_FormClosed(object sender, FormClosedEventArgs e)
@@ -323,8 +325,7 @@ namespace BrowserSelect
 
         private void chk_check_update_CheckedChanged(object sender, EventArgs e)
         {
-            Settings.Default.CheckForUpdates = ((CheckBox)sender).Checked;
-            Settings.Default.Save();
+            set_unsaved_changes();
         }
 
         private void btn_refresh_Click(object sender, EventArgs e)
@@ -379,8 +380,7 @@ namespace BrowserSelect
                 dgv.Rows[rowIndex - 1].Cells[colIndex].Selected = true;
                 dgv.CurrentCell = dgv[colIndex, rowIndex - 1];
                 //set the unsaved changes flag to true
-                btn_apply.Enabled = true;
-                btn_cancel.Text = "Cancel";
+                set_unsaved_changes();
             }
             catch (Exception ex)
             {
@@ -410,8 +410,7 @@ namespace BrowserSelect
                 dgv.Rows[rowIndex + 1].Cells[colIndex].Selected = true;
                 dgv.CurrentCell = dgv[colIndex, rowIndex + 1];
                 //set the unsaved changes flag to true
-                btn_apply.Enabled = true;
-                btn_cancel.Text = "Cancel";
+                set_unsaved_changes();
             }
             catch (Exception ex)
             {
@@ -421,8 +420,19 @@ namespace BrowserSelect
 
         private void chk_launch_settings_CheckedChanged(object sender, EventArgs e)
         {
-            Settings.Default.LaunchToSettings = ((CheckBox)sender).Checked;
-            Settings.Default.Save();
+            set_unsaved_changes();
+        }
+
+        private void cmbo_default_browser_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //set the unsaved changes flag to true
+            set_unsaved_changes();
+        }
+
+        private void set_unsaved_changes()
+        {
+            btn_apply.Enabled = true;
+            btn_cancel.Text = "Cancel";
         }
     }
 }
