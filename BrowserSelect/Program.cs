@@ -344,7 +344,7 @@ namespace BrowserSelect
                 // request to releases/latest redirects the user to /releases/tag.
                 // since tag is the version number we can get latest version from Location header
                 // and make a HEAD request instead of get to save bandwidth
-                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create("https://github.com/lucasnz/BrowserSelect/releases/latest");
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create($"https://github.com/{Settings.Default.GithubRepo}/releases/latest");
                 ServicePointManager.Expect100Continue = true;
                 webRequest.Method = "HEAD";
                 webRequest.AllowAutoRedirect = false;
@@ -414,7 +414,7 @@ namespace BrowserSelect
               "\nDo you want to download the update now?",
               currentVer, latestVer), "Updates Avaialble", MessageBoxButtons.YesNo);
             if (dUpdate == DialogResult.Yes)
-                System.Diagnostics.Process.Start("https://github.com/lucasnz/BrowserSelect/releases/latest");
+                System.Diagnostics.Process.Start($"https://github.com/{Settings.Default.GithubRepo}/releases/latest");
         }
 
         private static HttpWebResponse MyWebRequest(Uri uri)

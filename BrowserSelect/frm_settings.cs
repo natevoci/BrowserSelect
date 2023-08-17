@@ -251,7 +251,7 @@ namespace BrowserSelect
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             // open RuleList help
-            Process.Start("https://github.com/lucasnz/BrowserSelect/");
+            Process.Start($"https://github.com/{Settings.Default.GithubRepo}/");
         }
 
         private void btn_apply_Click(object sender, EventArgs e)

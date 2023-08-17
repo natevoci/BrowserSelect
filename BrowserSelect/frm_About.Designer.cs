@@ -1,4 +1,6 @@
-﻿namespace BrowserSelect {
+﻿using BrowserSelect.Properties;
+
+namespace BrowserSelect {
     partial class frm_About {
         /// <summary>
         /// Required designer variable.
@@ -60,7 +62,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(236, 65);
             this.label2.TabIndex = 2;
-            this.label2.Text = "Originally coded by: Bor691, updates by: lucasnz\r\n\r\nContact me : \r\n\r\nGitHub: ";
+            this.label2.Text = "Originally coded by: Bor691, updates by: lucasnz and natevoci\r\n\r\nContact me : \r\n\r\nGitHub: ";
             // 
             // linkLabel1
             // 
@@ -81,7 +83,7 @@
             this.linkLabel2.Size = new System.Drawing.Size(211, 13);
             this.linkLabel2.TabIndex = 4;
             this.linkLabel2.TabStop = true;
-            this.linkLabel2.Text = "https://github.com/zumoshi/BrowserSelect";
+            this.linkLabel2.Text = $"https://github.com/{Settings.Default.GithubRepo}";
             this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
             // 
             // label3
@@ -184,7 +186,7 @@
             this.linkLabel4.Size = new System.Drawing.Size(209, 13);
             this.linkLabel4.TabIndex = 15;
             this.linkLabel4.TabStop = true;
-            this.linkLabel4.Text = "https://github.com/lucasnz/BrowserSelect";
+            this.linkLabel4.Text = $"https://github.com/{Settings.Default.GithubRepo}";
             this.linkLabel4.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
             // 
             // frm_About

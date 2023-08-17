@@ -68,7 +68,7 @@ namespace BrowserSelect.Properties {
                 this["BrowserList"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Never")]
@@ -183,6 +183,15 @@ namespace BrowserSelect.Properties {
             }
             set {
                 this["CompactVertical"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("natevoci/BrowserSelect")]
+        public string GithubRepo {
+            get {
+                return ((string)(this["GithubRepo"]));
             }
         }
     }
