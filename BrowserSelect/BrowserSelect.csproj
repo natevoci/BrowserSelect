@@ -61,6 +61,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Browser.cs" />
+    <Compile Include="BrowserUCCompact.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BrowserUCCompact.Designer.cs">
+      <DependentUpon>BrowserUCCompact.cs</DependentUpon>
+    </Compile>
     <Compile Include="BrowserUC.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -116,12 +122,16 @@
     <Compile Include="frm_settings.Designer.cs">
       <DependentUpon>frm_settings.cs</DependentUpon>
     </Compile>
+    <Compile Include="IBrowserUC.cs" />
     <Compile Include="IconExtractor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VButton.cs">
       <SubType>Component</SubType>
     </Compile>
+    <EmbeddedResource Include="BrowserUCCompact.resx">
+      <DependentUpon>BrowserUCCompact.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BrowserUC.resx">
       <DependentUpon>BrowserUC.cs</DependentUpon>
     </EmbeddedResource>

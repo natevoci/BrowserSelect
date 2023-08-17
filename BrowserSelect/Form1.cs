@@ -26,30 +26,76 @@ namespace BrowserSelect
 
         public void updateBrowsers()
         {
-            SuspendLayout();
-            browsers = BrowserFinder.find().Where(b => !Settings.Default.HideBrowsers.Contains(b.Identifier)).ToList();
-            int i = 0;
-            int width = 0;
-            for (int k = Controls.Count - 1; k >= 0; k--)
+            if (!Settings.Default.CompactVertical)
             {
-                Control c = Controls[k];
-                if (c is BrowserUC)
-                    Controls.RemoveAt(k);
+                SuspendLayout();
+                browsers = BrowserFinder.find().Where(b => !Settings.Default.HideBrowsers.Contains(b.Identifier)).ToList();
+                int i = 0;
+                int width = 0;
+                for (int k = Controls.Count - 1; k >= 0; k--)
+                {
+                    Control c = Controls[k];
+                    if (c is IBrowserUC)
+                        Controls.RemoveAt(k);
+                }
+                // add browserUC objects to the form
+                foreach (var browser in browsers)
+                {
+                    var buc = new BrowserUC(browser, i);
+                    width = buc.Width;  // buc.Width = 128*dpi Scale
+                    buc.Left = width * i++;
+                    buc.Click += browser_click;
+                    this.Controls.Add(buc);
+                }
+                ResumeLayout();
+                buc.Left = i * width;
+                btn_help.Left = i * width;
+                btn_help.Top = buc.Height - btn_help.Height;
             }
-            // add browserUC objects to the form
-            foreach (var browser in browsers)
+            else
             {
-                var buc = new BrowserUC(browser, i);
-                width = buc.Width;  // buc.Width = 128*dpi Scale
-                buc.Left = width * i++;
-                buc.Click += browser_click;
-                this.Controls.Add(buc);
+                SuspendLayout();
+                browsers = BrowserFinder.find().Where(b => !Settings.Default.HideBrowsers.Contains(b.Identifier)).ToList();
+                int i = 0;
+                int height = 0;
+                for (int k = Controls.Count - 1; k >= 0; k--)
+                {
+                    Control c = Controls[k];
+                    if (c is IBrowserUC)
+                        Controls.RemoveAt(k);
+                }
+
+                var alwaysDomain = _alwaysRule.mode != 2 ? _alwaysRule.tld_rule : _alwaysRule.second_rule;
+
+                var bucs = new List<BrowserUCCompact>();
+                foreach (var browser in browsers)
+                {
+                    var buc = new BrowserUCCompact(browser, i, alwaysDomain);
+                    height = buc.Height;
+                    buc.Top = height * i++;
+                    buc.Selected += browser_click;
+                    buc.BackColor = Color.White;
+
+                    this.Controls.Add(buc);
+                    bucs.Add(buc);
+                }
+
+                var maxWidth = bucs.Select(b => b.MeasuredWidth).Max();
+                this.Width = maxWidth;
+
+                foreach (var buc in bucs)
+                {
+                    buc.Width = maxWidth;
+                }
+
+                ResumeLayout();
+                buc.Left = 0;
+                buc.BackColor = Color.White;
+                btn_help.BackColor = Color.White;
+                btn_help.Left = 0;
+                btn_help.Top = buc.Height - btn_help.Height;
             }
-            ResumeLayout();
-            buc.Left = i * width;
-            btn_help.Left = i * width;
-            btn_help.Top = buc.Height - btn_help.Height;
-            // this.Width = i * 128 + 20 + 20;
+            center_me();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -69,7 +115,6 @@ namespace BrowserSelect
             buc = new ButtonsUC(this);
             this.Controls.Add(buc);
             this.updateBrowsers();
-            center_me();
         }
 
         public void DisplayUpdate()
@@ -220,21 +265,21 @@ namespace BrowserSelect
         private void browser_click(object sender, EventArgs e)
         {
             // callback for click event inside the browserControls
-            BrowserUC uc;
-            if (sender is BrowserUC)
-                uc = (BrowserUC)sender;
-            else if (((Control)sender).Parent is BrowserUC)
-                uc = (BrowserUC)((Control)sender).Parent;
+            IBrowserUC uc;
+            if (sender is IBrowserUC)
+                uc = (IBrowserUC)sender;
+            else if (((Control)sender).Parent is IBrowserUC)
+                uc = (IBrowserUC)((Control)sender).Parent;
             else
                 throw new Exception("this should not happen");
 
             // check if Always was clicked
             if (uc.Always)
-                add_rule(uc.browser);
+                add_rule(uc.Browser);
             else if ((ModifierKeys & Keys.Shift) != 0 || (ModifierKeys & Keys.Alt) != 0)    // open in incognito
-                open_url(uc.browser, true);
+                open_url(uc.Browser, true);
             else
-                open_url(uc.browser);
+                open_url(uc.Browser);
         }
 
         public static void open_url(Browser b, bool incognito = false)

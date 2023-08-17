@@ -8,12 +8,16 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace BrowserSelect {
-    public partial class BrowserUC : UserControl {
-        public Browser browser;
+    public partial class BrowserUC : UserControl, IBrowserUC {
+        public Browser _browser;
+
+        public bool Always { get; set; } = false;
+        public Browser Browser { get => _browser; }
+
         public BrowserUC(Browser b,int index) {
             InitializeComponent();
 
-            this.browser = b;
+            this._browser = b;
 
             name.Text = b.name;
             shortcuts.Text = "( " + Convert.ToString(index+1) + "," + String.Join(",", b.shortcuts) + " )";
@@ -36,7 +40,6 @@ namespace BrowserSelect {
             }
         }
 
-        public bool Always { get; set; } = false;
 
         private void button1_Click(object sender, EventArgs e)
         {

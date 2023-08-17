@@ -211,6 +211,7 @@
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.Name = "frm_About";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Browser Select: About";
             this.Load += new System.EventHandler(this.frm_About_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.frm_About_KeyDown);

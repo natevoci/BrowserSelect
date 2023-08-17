@@ -15,6 +15,8 @@ namespace BrowserSelect
     public class Browser
     {
         public string name;
+        public string profile;
+        public string user;
         public string exec;
         public string icon;
         public string additionalArgs = "";
@@ -129,10 +131,10 @@ namespace BrowserSelect
                     .Select(group => group.First()).ToList();
 
                 //check for edge chromium profiles
-                AddChromeProfiles(browsers, "Microsoft Edge", @"Microsoft\Edge\User Data", "Edge Profile.ico");
+                AddChromeProfiles(browsers, "Microsoft Edge", "Edge", @"Microsoft\Edge\User Data", "Edge Profile.ico");
                 
                 //Check for Chrome Profiles
-                AddChromeProfiles(browsers, "Google Chrome", @"Google\Chrome\User Data", "Google Profile.ico");
+                AddChromeProfiles(browsers, "Google Chrome", "Chrome", @"Google\Chrome\User Data", "Google Profile.ico");
 
                 System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(browsers));
                 Properties.Settings.Default.BrowserList = JsonConvert.SerializeObject(browsers);
@@ -142,9 +144,9 @@ namespace BrowserSelect
             return browsers;
         }
 
-        private static void AddChromeProfiles(List<Browser> browsers, string BrowserName, string VendorDataFolder, string IconFilename)
+        private static void AddChromeProfiles(List<Browser> browsers, string findBrowserName, string BrowserName, string VendorDataFolder, string IconFilename)
         {
-            Browser BrowserChrome = browsers.FirstOrDefault(x => x.name == BrowserName);
+            Browser BrowserChrome = browsers.FirstOrDefault(x => x.name == findBrowserName);
             if (BrowserChrome != null)
             {
                 string ChromeUserDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), VendorDataFolder);
@@ -155,9 +157,13 @@ namespace BrowserSelect
                     //add the Chrome instances and remove the default one
                     foreach (string Profile in ChromeProfiles)
                     {
+                        dynamic ProfilePreferences = JObject.Parse(File.ReadAllText(ChromeUserDataDir + "\\" + Profile + @"\Preferences"));
+
                         browsers.Add(new Browser()
                         {
-                            name = BrowserName + " (" + GetChromeProfileName(ChromeUserDataDir + "\\" + Profile) + ")",
+                            name = BrowserName + " (" + ProfilePreferences.profile.name + ")",
+                            profile = Profile,
+                            user = (ProfilePreferences.account_info != null && ProfilePreferences.account_info.Count > 0) ? ProfilePreferences.account_info[0].email : "",
                             exec = BrowserChrome.exec,
                             icon = icon2String(IconExtractor.fromFile(ChromeUserDataDir + "\\" + Profile + "\\" + IconFilename)),
                             additionalArgs = String.Format("--profile-directory={0}", Profile)

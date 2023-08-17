@@ -17,6 +17,7 @@ namespace BrowserSelect
 
         public Form1 mainForm;
         private DataTable rules;
+        private bool formLoaded = false;
 
         public frm_settings()
         {
@@ -80,7 +81,9 @@ namespace BrowserSelect
 
             chk_check_update.Checked = Settings.Default.CheckForUpdates;
             chk_launch_settings.Checked = (Boolean)Settings.Default.LaunchToSettings;
+            checkBoxCompactMode.Checked = Settings.Default.CompactVertical;
             btn_apply.Enabled = false;
+            formLoaded = true;
         }
 
         private Boolean check_rules()
@@ -358,6 +361,14 @@ namespace BrowserSelect
             (new frm_settings_urlexpander()).ShowDialog();
         }
 
+        private void checkBoxCompactMode_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.CompactVertical = ((CheckBox)sender).Checked;
+            Settings.Default.Save();
+            if (mainForm != null)
+                this.mainForm.updateBrowsers();
+        }
+
         private void btn_up_Click(object sender, EventArgs e)
         {
             DataGridView dgv = gv_filters;
@@ -431,8 +442,11 @@ namespace BrowserSelect
 
         private void set_unsaved_changes()
         {
-            btn_apply.Enabled = true;
-            btn_cancel.Text = "Cancel";
+            if (formLoaded)
+            {
+                btn_apply.Enabled = true;
+                btn_cancel.Text = "Cancel";
+            }
         }
     }
 }
