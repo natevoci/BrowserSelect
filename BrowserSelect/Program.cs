@@ -2,17 +2,31 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using BrowserSelect.Properties;
+using System.Web;
+using System.Net;
+using System.Threading;
+using Newtonsoft.Json;
+using System.Data;
 
 namespace BrowserSelect
 {
     static class Program
     {
-        public static string url = "http://google.com/";
+        public static string url = "";
+        public static HttpWebRequest webRequestThread = null;
+        public static bool uriExpanderThreadStop = false;
+        public static string currentVer = "";
+        public static string latestVer = "";
+        public static (string name, string domain)[] defaultUriExpander = new(string name, string domain)[]
+            {
+                ("Outlook safe links", "safelinks.protection.outlook.com")//,
+                //("Test1", "test.com"),
+                //("Test2", "test2.com")
+            };
 
         /// <summary>
         /// The main entry point for the application.
@@ -20,15 +34,11 @@ namespace BrowserSelect
         [STAThread]
         static void Main(string[] args)
         {
-
-            // fix #28
-            LeaveDotsAndSlashesEscaped();
             // to prevent loss of settings when on update
             if (Settings.Default.UpdateSettings)
             {
                 Settings.Default.Upgrade();
                 Settings.Default.UpdateSettings = false;
-                Settings.Default.last_version = "nope";
                 // to prevent nullreference in case settings file did not exist
                 if (Settings.Default.HideBrowsers == null)
                     Settings.Default.HideBrowsers = new StringCollection();
@@ -36,78 +46,144 @@ namespace BrowserSelect
                     Settings.Default.AutoBrowser = new StringCollection();
                 Settings.Default.Save();
             }
-            // check for update
-            if (Settings.Default.check_update != "nope" &&
-                DateTime.Now.Subtract(time(Settings.Default.check_update)).TotalDays > 7)
+            currentVer = ((Func<String, String>)((x) => x.Substring(0, x.Length - 2)))(Application.ProductVersion);
+            //load URL Shortners
+            string[] defultUrlShortners = new string[] {
+                "adf.ly",
+                "bit.do",
+                "bit.ly",
+                "goo.gl",
+                "ht.ly",
+                "is.gd",
+                "ity.im",
+                "lnk.co",
+                "ow.ly",
+                "q.gs",
+                "rb.gy",
+                "rotf.lol",
+                "t.co",
+                "tiny.one",
+                "tinyurl.com"
+            };
+            if (Settings.Default.URLShortners == null)
             {
-                var uc = new UpdateChecker();
-                Task.Factory.StartNew(() => uc.check());
+                StringCollection url_shortners = new StringCollection();
+                url_shortners.AddRange(defultUrlShortners);
+                Settings.Default.URLShortners = url_shortners;
+                Settings.Default.Save();
             }
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Task taskForm = null;
+
             //checking if a url is being opened or app is ran from start menu (without arguments)
+            Boolean loadedBrowser = false;
             if (args.Length > 0)
             {
                 //check to see if auto select rules match
                 url = args[0];
                 //add http:// to url if it is missing a protocol
                 var uri = new UriBuilder(url).Uri;
+                uri = UriExpander(uri);
+                if (Settings.Default.ExpandUrl != null && Settings.Default.ExpandUrl != "Never")
+                    uri = UriFollowRedirects(uri);
                 url = uri.AbsoluteUri;
 
-                foreach (var sr in Settings.Default.AutoBrowser.Cast<string>()
-                    // maybe i should use a better way to split the pattern and browser name ?
-                    .Select(x => x.Split(new[] { "[#!][$~][?_]" }, StringSplitOptions.None))
-                    // to make sure * doesn't match when non-* rules exist.
-                    .OrderBy(x => ((x[0].Contains("*")) ? 1 : 0) + (x[0] == "*" ? 1 : 0)))
+                //if we loaded the browser finish execution here...
+                loadedBrowser = load_browser(uri);
+            }
+            Form form = null;
+            if (!loadedBrowser)
+            {
+                // display main form
+                if (url == "" && (Boolean)Settings.Default.LaunchToSettings)
+                    form = new frm_settings();
+                else
+                    form = new Form1();
+                taskForm = Task.Factory.StartNew(() =>
                 {
-                    var pattern = sr[0];
-                    var browser = sr[1];
+                    Application.Run(form);
+                });
+            }
+            // check for update
+            //if update is available show update icon if Form1 is displayed otherwise for popup
+            if (CheckForUpdates())
+                if (form is Form1 form1 && !form1.Disposing && !form1.IsDisposed)
+                    form1.DisplayUpdate();
+                else
+                    UpdateDialog();
 
-                    // matching the domain to pattern
-                    if (DoesDomainMatchPattern(uri.Host, pattern))
+            if (taskForm != null)
+                taskForm.Wait();
+            
+            System.Diagnostics.Debug.WriteLine("END");
+        }
+
+        private static Boolean load_browser(Uri uri)
+        {
+            if (Settings.Default.Rules != null && Settings.Default.Rules != "")
+            {
+                DataTable rules = (DataTable)JsonConvert.DeserializeObject(Settings.Default.Rules, (typeof(DataTable)));
+                foreach (DataRow rule in rules.Rows)
+                {
+                    Boolean rule_match = false;
+                    string match_type = (string)rule["Type"];
+                    string match = (string)rule["Match"];
+                    string pattern = (string)rule["Pattern"];
+
+                    string test_uri = "";
+                    if (match == "Domain")
+                        test_uri = uri.Host;
+                    else if (match == "URL Path")
+                        test_uri = uri.PathAndQuery;
+                    else if (match == "Full URL")
+                        test_uri = uri.AbsoluteUri;
+
+                    switch (match_type)
                     {
-                        // ignore the display browser select entry to prevent app running itself
-                        if (browser != "display BrowserSelect")
-                        {
-                            //todo: handle the case if browser is not found (e.g. imported settings or uninstalled browser)
-                            Form1.open_url((Browser)browser);
-                            return;
-                        }
-                        else
-                        {
-                            // simply break the loop to let the app display selection dialogue
+                        case "Ends With":
+                            if (test_uri.EndsWith(pattern, StringComparison.OrdinalIgnoreCase))
+                                rule_match = true;
                             break;
-                        }
+                        case "Starts With":
+                            if (test_uri.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))
+                                rule_match = true;
+                            break;
+                        case "Contains":
+                            if (test_uri.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0)
+                                rule_match = true;
+                            break;
+                        case "Matches":
+                            if (test_uri.Equals(pattern, StringComparison.OrdinalIgnoreCase))
+                                rule_match = true;
+                            break;
+                        case "RegEx":
+                            Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
+                            if (regex.IsMatch(test_uri))
+                                rule_match = true;
+                            break;
+                    }
+
+                    if (rule_match)
+                    {
+                        System.Diagnostics.Debug.WriteLine(test_uri + " " + match_type + " " + pattern);
+                        string browser = (string)rule["Browser"];
+                        if (browser != "display BrowserSelect")
+                            Form1.open_url((Browser)browser);
+                        return true;
                     }
                 }
             }
-
-            // display main form
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            if (Settings.Default.DefaultBrowser != null &&
+                Settings.Default.DefaultBrowser != "" &&
+                Settings.Default.DefaultBrowser != "display BrowserSelect")
+            {
+                Form1.open_url((Browser)Settings.Default.DefaultBrowser);
+                return true;
+            }
+            return false;
         }
-
-        // from : http://stackoverflow.com/a/250400/1461004
-        public static double time()
-        {
-            return time(DateTime.Now);
-        }
-        public static DateTime time(string unixTimeStamp)
-        {
-            return time(double.Parse(unixTimeStamp));
-        }
-        public static DateTime time(double unixTimeStamp)
-        {
-            // Unix timestamp is seconds past epoch
-            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
-            return dtDateTime;
-        }
-        public static double time(DateTime dateTime)
-        {
-            return (TimeZoneInfo.ConvertTimeToUtc(dateTime) -
-                   new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
-        }
-
 
         public static string Args2Str(List<string> args)
         {
@@ -146,66 +222,243 @@ namespace BrowserSelect
             return Environment.GetEnvironmentVariable("ProgramFiles");
         }
 
+        private static Uri UriExpander(Uri uri)
+        {
+            List<string> enabled_url_expanders = new List<string>();
+            if (Settings.Default.URLProcessors != null)
+            {
+                foreach ((string name, string domain) in defaultUriExpander)
+                {
+                    if (Settings.Default.URLProcessors.Contains(name))
+                    {
+                        enabled_url_expanders.Add(domain);
+                    }
+                }
+            }
 
-        /// <summary>
-        /// Checks if a wildcard string matches a domain
-        /// taken from http://madskristensen.net/post/wildcard-search-for-domains-in-c
-        /// </summary>
-        public static bool DoesDomainMatchPattern(string domain, string domainToCheck)
-        {
-            if (domainToCheck.Contains("*"))
+            System.Diagnostics.Debug.WriteLine("URLExpander: " + uri.Host);
+            if (uri.Host.EndsWith("safelinks.protection.outlook.com") &&
+                enabled_url_expanders.Contains("safelinks.protection.outlook.com"))
             {
-                string checkDomain = domainToCheck;
-                if (checkDomain.StartsWith("*."))
-                    checkDomain = "*" + checkDomain.Substring(2, checkDomain.Length - 2);
-                return DoesWildcardMatch(domain, checkDomain);
+                var queryDict = HttpUtility.ParseQueryString(uri.Query);
+                if (queryDict != null && queryDict.Get("url") != null)
+                {
+                    uri = new UriBuilder(HttpUtility.UrlDecode(queryDict.Get("url"))).Uri;
+                }
             }
-            else
-            {
-                return domainToCheck.Equals(domain, StringComparison.OrdinalIgnoreCase);
-            }
-        }
-        /// <summary>
-        /// Performs a wildcard (*) search on any string.
-        /// </summary>
-        public static bool DoesWildcardMatch(string originalString, string searchString)
-        {
-            if (!searchString.StartsWith("*"))
-            {
-                int stop = searchString.IndexOf('*');
-                if (!originalString.StartsWith(searchString.Substring(0, stop)))
-                    return false;
-            }
-            if (!searchString.EndsWith("*"))
-            {
-                int start = searchString.LastIndexOf('*') + 1;
-                if (!originalString.EndsWith(searchString.Substring(start, searchString.Length - start)))
-                    return false;
-            }
-            Regex regex = new Regex(searchString.Replace(@".", @"\.").Replace(@"*", @".*"));
-            return regex.IsMatch(originalString);
+
+            return uri;
         }
 
-        // https://stackoverflow.com/a/7202560/1461004
-        private static void LeaveDotsAndSlashesEscaped()
+        private static Uri UriFollowRedirects(Uri uri, int num_redirects = 0)
         {
-            var getSyntaxMethod =
-                typeof(UriParser).GetMethod("GetSyntax", BindingFlags.Static | BindingFlags.NonPublic);
-            if (getSyntaxMethod == null)
+            int max_redirects = 20;
+            if (num_redirects >= max_redirects)
             {
-                throw new MissingMethodException("UriParser", "GetSyntax");
+                return uri;
+            }
+            System.Diagnostics.Debug.WriteLine("Url " + num_redirects + " " + uri.Host);
+            StringCollection url_shortners = Settings.Default.URLShortners;
+            Form SplashScreen = null;
+            if (!Program.uriExpanderThreadStop &&
+                (url_shortners.Contains(uri.Host) || Settings.Default.ExpandUrl == "Follow all redirects"))
+            {
+                //Thread.Sleep(2000);
+                if (num_redirects == 0)
+                {
+                    SplashScreen = new frm_SplashScreen();
+                    var splashThread = new Thread(new ThreadStart(() => Application.Run(SplashScreen)));
+                    splashThread.Start();
+                }
+                HttpWebResponse response = MyWebRequest(uri);
+                if (response != null)
+                {
+                    if ((int)response.StatusCode > 299 && (int)response.StatusCode < 400)
+                    {
+                        uri = UriFollowRedirects(new UriBuilder(response.Headers["Location"]).Uri, (num_redirects + 1));
+                    }
+                    else
+                    {
+                        uri = response.ResponseUri;
+                    }
+                }
             }
 
-            var uriParser = getSyntaxMethod.Invoke(null, new object[] { "http" });
-
-            var setUpdatableFlagsMethod =
-                uriParser.GetType().GetMethod("SetUpdatableFlags", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (setUpdatableFlagsMethod == null)
+            if (num_redirects == 0)
             {
-                throw new MissingMethodException("UriParser", "SetUpdatableFlags");
+                if (SplashScreen != null && !SplashScreen.Disposing && !SplashScreen.IsDisposed)
+                    try
+                    {
+                        Program.uriExpanderThreadStop = true;
+                        SplashScreen.Invoke(new Action(() => SplashScreen.Close()));
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex);
+                    }
+            }
+            return uri;
+        }
+
+        public static Boolean CheckForUpdates()
+        {
+            if (Settings.Default.CheckForUpdates)
+            {
+                DateTime lastUpdateCheck;
+                // On first load LastUpdateCheck is not set, Checking for a null value didn't work
+                // So if we fail to load it, we'll set it to 1980 to force an update check
+                try
+                {
+                    lastUpdateCheck = Settings.Default.LastUpdateCheck;
+                }
+                catch
+                {
+                    lastUpdateCheck = new DateTime(1980, 1, 1, 0, 0, 0);
+                }
+                System.Diagnostics.Debug.WriteLine("lastUpdateCheck: " + lastUpdateCheck + " diff, days: " + (DateTime.Now.Subtract(lastUpdateCheck)).Days);
+                if ((DateTime.Now - lastUpdateCheck).Days >= 1)
+                {
+                    Task taskCheckUpdate = QueryUpdates();
+                    taskCheckUpdate.Wait();
+                    Settings.Default.LastUpdateCheck = DateTime.Now;
+                    Settings.Default.Save();
+                }
+                if (latestVer == "")
+                    latestVer = Settings.Default.LatestVersion;
+                //update available?
+                if (latestVer != "" && currentVer.CompareTo(latestVer) < 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static Task QueryUpdates()
+        {
+            if (currentVer == "")
+                currentVer = ((Func<String, String>)((x) => x.Substring(0, x.Length - 2)))(Application.ProductVersion);
+            Task task = Task.Factory.StartNew(() =>
+            {
+                System.Diagnostics.Debug.WriteLine("QueryUpdates");
+                // request to releases/latest redirects the user to /releases/tag.
+                // since tag is the version number we can get latest version from Location header
+                // and make a HEAD request instead of get to save bandwidth
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create("https://github.com/lucasnz/BrowserSelect/releases/latest");
+                ServicePointManager.Expect100Continue = true;
+                webRequest.Method = "HEAD";
+                webRequest.AllowAutoRedirect = false;
+                webRequest.Timeout = 2000;
+                WebResponse response = null;
+                try
+                {
+                    response = webRequest.GetResponse();
+                }
+                catch (WebException ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex);
+                }
+                if (response != null)
+                {
+                    if (response.Headers["Location"] != null)
+                    {
+                        string locationResponse = response.Headers["Location"].Split('/').Last();
+                        Boolean isNumeric = true;
+                        foreach (var num in locationResponse.Split('.'))
+                        {
+                            if (!int.TryParse(num, out _))
+                                isNumeric = false;
+                        }
+                        if (isNumeric)
+                        {
+                            latestVer = locationResponse;
+                            Settings.Default.LatestVersion = latestVer;
+                            Settings.Default.Save();
+                            #if DEBUG
+                            int verCompare = currentVer.CompareTo(latestVer);
+                            if (verCompare > 0)
+                                System.Diagnostics.Debug.WriteLine("Current version: " + currentVer + " is greater than, latest published version: " + latestVer);
+                            else if (verCompare < 0)
+                                System.Diagnostics.Debug.WriteLine("Current version: " + currentVer + " is less than, latest published version: " + latestVer);
+                            else
+                                System.Diagnostics.Debug.WriteLine("Current version: " + currentVer + " equals, latest published version: " + latestVer);
+                            #endif
+                        }
+                        else
+                        {
+                            latestVer = "";
+                            System.Diagnostics.Debug.WriteLine("Error converting version number...");
+                        }
+                    }
+                    else
+                    {
+                        latestVer = "";
+                        System.Diagnostics.Debug.WriteLine("Error retrieving version number... no location header in response.");
+                    }
+                    response.Close();
+                }
+                else
+                {
+                    latestVer = "";
+                    System.Diagnostics.Debug.WriteLine("Error retrieving version number... response null.");
+                }
+            });
+            return task;
+        }
+
+        public static void UpdateDialog()
+        {
+            DialogResult dUpdate = MessageBox.Show(String.Format(
+              "New Update Available!\nCurrent Version: {0}\nLast Version: {1}" +
+              "\nto Update download and install the new version from project's github." +
+              "\nDo you want to download the update now?",
+              currentVer, latestVer), "Updates Avaialble", MessageBoxButtons.YesNo);
+            if (dUpdate == DialogResult.Yes)
+                System.Diagnostics.Process.Start("https://github.com/lucasnz/BrowserSelect/releases/latest");
+        }
+
+        private static HttpWebResponse MyWebRequest(Uri uri)
+        {
+            //Support TLS1.2 - updated .Net framework - no longer needed
+            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | (SecurityProtocolType)768 | (SecurityProtocolType)3072 | SecurityProtocolType.Ssl3; //SecurityProtocolType.Tls12;
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri.AbsoluteUri);
+            // Set timeout - needs to be high enough for HTTP request to succeed on slow network connections,
+            // but fast enough not to slow down BrowserSelect startup too much.
+            // 2 seconds seems about right
+            webRequest.Timeout = 2000;
+            //webRequest.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv: 85.0) Gecko/20100101 Firefox/85.0";
+            webRequest.AllowAutoRedirect = false;
+            HttpWebResponse response = null;
+            try
+            {
+                var ar = webRequest.BeginGetResponse(null, null);
+                Program.webRequestThread = webRequest;
+                ThreadPool.RegisterWaitForSingleObject(ar.AsyncWaitHandle, new WaitOrTimerCallback(TimeoutCallback), webRequest, webRequest.Timeout, true);
+                response = (HttpWebResponse)webRequest.EndGetResponse(ar);
+                response.Close();
+            }
+            catch (WebException ex)
+            {
+                // We are mostly catch up webRequest.Abort() or webRequest errors here (e.g. untrusted certificates)
+                // No action required.
+                System.Diagnostics.Debug.WriteLine(ex);
             }
 
-            setUpdatableFlagsMethod.Invoke(uriParser, new object[] { 0 });
+            return response;
+        }
+
+        // Abort the request if the timer fires.
+        private static void TimeoutCallback(object state, bool timedOut)
+        {
+            if (timedOut)
+            {
+                HttpWebRequest request = state as HttpWebRequest;
+                if (request != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Timed out, aborting HTTP request...");
+                    request.Abort();
+                }
+            }
         }
     }
 }

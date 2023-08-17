@@ -117,24 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="label1.Text" xml:space="preserve">
-    <value>BrowserSelect helps you to use multiple browsers more easily. When set as the default browser (you can do this in the settings form), upon clicking on links outside a browser (e.g. IM, Email client, Pdf file, ...) you will be presented with a list of all installed browsers instead of one browser opening (which may not be the one you intended).
-
-In the main page you can see the Url being opened as Title of the window, here you have 3 options:
-1. press Esc key or click "x" to not open the URL 
-    (if you miss clicked or if a program wants to open a web page after installation but you don't want to see it)
-2. choose a browser to open the URL in
-    you can do this by :
-        1. clicking on the browser Icon
-                note: Holding the Shift key while clicking will open the link in incognito mode
-        2. pressing any of the letters displayed in parentheses under its icon on keyboard
-            (which is its index counting from the left , and first letter of each of its names words)
-3. choose to always open such links in a browser by clicking on "always" button
-    this will create a rule for all subdomains of current URL, to undo this open BrowserSelect via start menu,
-    go to settings, highlight the rule for that domain, press Delete key on keyboard then press apply
-
-The first time you run BrowserSelect it caches your list of installed browsers and profiles. To update the browsers and profiles, go to Settings and hit the "Refresh" button next to the list of browsers.
-
-if you don't regularly use many browsers but instead open all URLs in one browser but one specific website in another (e.g. firefox for normal use but IE for company website) you can go to settings and configure a default browser all links that don't match another rule. Add separate rules for websites to open in other browsers.</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="$this.Locked" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
 </root>
