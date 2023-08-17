@@ -23,11 +23,27 @@ To install Download this file then set it as the default browser.
 
 ![select default browser](https://raw.githubusercontent.com/lucasnz/BrowserSelect/master/screenshots/photo_2015-10-12_16-43-08.jpg)
 
-BrowserSelect has been tested on windows 7, windows 8.1 and windows 10. requires **.net framework 4**.
+BrowserSelect has been tested on windows 7, windows 8.1, windows 10, and windows 11. requires **.net framework 4.7.2**.
 
 # Download
 
-You can download browser select here : [Browser select (477KB)](https://github.com/lucasnz/BrowserSelect/releases/latest)
+You can download browser select in the [releases](/releases/latest) section.
+
+
+# Screenshots
+
+![screenshot1](screenshots/photo_2016-07-11_13-44-19.png)
+
+
+Compact vertical mode. Useful if you have lots of profiles
+![screenshot1](screenshots/compact-vertical.png)
+
+Settings
+![screenshot1](screenshots/settings.png)
+
+URL Expander settings
+![screenshot1](screenshots/url-expander-config.png)
+
 
 
 # ToDo
@@ -59,20 +75,30 @@ Just a list of some ideas that can be integrated into BrowserSelect.
 - [ ] handling of other link types (e.g. `mail:` in case you have both outlook and thunderbird installed [or maybe as a sister app])
 - [x] update checker (not as a popup or messagebox, a tiny icon somewhere on the main form that appears when you don't have the last version)
 - [ ] add file associations (e.g. .url files, or .html files)
+- [ ] record which browser you select for each domain and provide visual indicator of how often each browser is chosen for this domain
 
 # Changelog
 
-v1.4.4 [17/10/21]
+v1.5.0 [17/08/2023]
+- New Feature: Compact vertical mode
+  - Includes display of username of chrome and edge profiles to help distinguish them
+    - Note: requires "Refresh" of browsers to detect usernames
+  - "Always" is accessible by right click context menu
+- Changed Browser detection to just use "Edge" and "Chrome" instead of "Microsoft Edge" and "Google Chrome" when naming profiles.
+- Changed Settings, About, and Help windows to open on the same screen as the main window.
+- Resolved issue with apply button getting enabled while the checkboxes and comboboxes are initialising.
+
+v1.4.4 [17/10/2021]
 - Resolved issues with apply button in settings.
 
-v1.4.3 [13/09/21]
+v1.4.3 [13/09/2021]
 - Updated help screens to match new filters
 - Tidied up update checker
 - Bug fixes:
   - Set default browser for newer versions of Windows
   - Squashed bug selecting a filter row
 
-v1.4.2 [09/09/21]
+v1.4.2 [09/09/2021]
 Cloned from: https://github.com/zumoshi/BrowserSelect
 - add support for O365 safelinks (expand these always)
 - expand shortened urls e.g. adf.ly or goo.gl
@@ -90,49 +116,49 @@ Cloned from: https://github.com/zumoshi/BrowserSelect
   - Added auto import and conversion from old rule format
 - other code clean up/fixes
 
-v1.4.1 [24/08/19]
+v1.4.1 [24/08/2019]
 - Fixed couldn't hide chrome profiles separately (#52)
 - Improved startup speed by caching browsers (#40)
 (special thanks to [kthejoker](https://github.com/kthejoker) for his pull request)
 
-v1.4.0 [12/06/18]
+v1.4.0 [12/06/2018]
 - Fixed Opera (post-blink) private mode (#35)
 - Chrome profiles are now listed as separate options (#29)
 (special thanks to [kueswol](https://github.com/kueswol) for his pull request)
 
-v1.3.9 [06/04/18]
+v1.3.9 [06/04/2018]
 - Fixed Edge private mode (#34)
 - Added Alt as an alternative to shift for open in private/incognito mode (#33)
 
-v1.3.8 [20/10/17]
+v1.3.8 [20/10/2017]
 - Fixed pattern generator for single part domains (e.g. localhost) (issue #27)
 - Fixed unintended unescaping of URL's (issue #28)
 
-v1.3.7 [16/08/17]
+v1.3.7 [16/08/2017]
 - Fixed issues with clipping on high dpi screens (#24)
 
-v1.3.6 [11/06/17]
+v1.3.6 [11/06/2017]
 - BrowserSelect's window now shows up in the monitor with the mouse cursor instead of the default one (#22)
 
-v1.3.5 [16/12/16]
+v1.3.5 [16/12/2016]
 - fixed crash on startup caused by incompatible/incomplete registry keys (issues #17,#20,#21)
 
-v1.3.4 [02/09/16]
+v1.3.4 [02/09/2016]
 - fixed Always button adding rules with the wrong pattern for second-level domains (e.g. *.com.au for news.com.au)
 - Shift Clicking on browsers now opens the URL in incognito/private browsing
 - added an update checker (adds a yellow "New" icon to the main window to indicate a new version is available)[disabled by default]
 
-v1.3.3 [03/08/16]
+v1.3.3 [03/08/2016]
 - fixed a crash on malformed (without protocol) URL's
 - added donate button in about page
 
-v1.3.2 [28/07/16]
+v1.3.2 [28/07/2016]
 - bugfix to bring IE to the foreground if it is already open
 
-v1.3.1 [14/07/16]
+v1.3.1 [14/07/2016]
 - bugfix for Auto rule creation of domains with subdomains
 
-v1.3 [11/07/16]
+v1.3 [11/07/2016]
 - Added an "Always" button under browser icons that adds a rule for *.domain.tld
 - Added a help button in the main form
 - made about form closable by Esc key
@@ -143,17 +169,17 @@ v1.3 [11/07/16]
 - polished the rule adding interface
 - some code Formating/Indenting/Restructuring
 
-v1.2.1 [14/06/16]
+v1.2.1 [14/06/2016]
 - bugfix for InternetExplorer to open links in a new tab instead of a new window
 
-v1.2 [08/06/16]
+v1.2 [08/06/2016]
 - you can now add URL patterns to select the Browser based on URL automatically.
 
-v1.1 [18/05/16]
+v1.1 [18/05/2016]
 - added option to select browsers that are displayed on the list (and remove/hide some)
 
-v1.0.2 [15/01/16]
+v1.0.2 [15/01/2016]
 - added option to set browser select as the default browser in settings
 
-v1.0.1 [27/10/15]
+v1.0.1 [27/10/2015]
 - added edge browser for windows 10 (it wouldn't show up due edge being a Universal App)
