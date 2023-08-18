@@ -36,12 +36,15 @@ You can download browser select in the [releases](/releases/latest) section.
 
 
 Compact vertical mode. Useful if you have lots of profiles
+
 ![screenshot1](screenshots/compact-vertical.png)
 
 Settings
+
 ![screenshot1](screenshots/settings.png)
 
 URL Expander settings
+
 ![screenshot1](screenshots/url-expander-config.png)
 
 
