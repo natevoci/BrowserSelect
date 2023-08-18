@@ -1,12 +1,3 @@
-Due to lack of time this repo has not gotten new updates in a while. While I have not abandoned the project and may update it in the future, for the time being if there are bugs or lack of features that makes this unusable to you, you can instead use one of these alternatives:
-- [Hurl](https://github.com/U-C-S/Hurl)
-- [Browser Tamer](https://www.aloneguid.uk/projects/bt/)
-- [Browser Choose 2](https://browserchooser2.com/)
-- [Browser Picker](https://github.com/mortenn/BrowserPicker)
-- [Browser Selector](https://github.com/DanTup/BrowserSelector)
-
----
-
 # Browser Select
 Browser Select is a utility to dynamically select the browser you want instead of just having one default for all links. Similar to the prompt in android to choose a browser when a link in a non-browser app is clicked/touched. It may not be useful for everyone but it helps when you use multiple browsers for different things (e.g. one with proxy and one without) and open many links from other applications (e.g. Messengers).
 
@@ -186,3 +177,14 @@ v1.0.2 [15/01/2016]
 
 v1.0.1 [27/10/2015]
 - added edge browser for windows 10 (it wouldn't show up due edge being a Universal App)
+
+---
+
+# Alternatives
+
+- [Hurl](https://github.com/U-C-S/Hurl)
+- [Browser Tamer](https://www.aloneguid.uk/projects/bt/)
+- [Browser Choose 2](https://browserchooser2.com/)
+- [Browser Picker](https://github.com/mortenn/BrowserPicker)
+- [Browser Selector](https://github.com/DanTup/BrowserSelector)
+
