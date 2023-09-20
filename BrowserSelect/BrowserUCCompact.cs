@@ -19,8 +19,11 @@ namespace BrowserSelect {
 
         private bool _isHighlighted = false;
         
+        public bool IsSelected { get; set; } = false;
+        
         public bool Always { get; set; } = false;
         public Browser Browser { get => _browser; }
+        public int Index { get => _index; }
 
         public int MeasuredWidth
         {
@@ -50,7 +53,6 @@ namespace BrowserSelect {
             using (var g = Graphics.FromHwnd(this.Handle))
             {
                 DrawMainText(g, true);
-                DrawShortcutText(g, true);
             }
         }
 
@@ -58,7 +60,7 @@ namespace BrowserSelect {
         {
             base.OnPaintBackground(e);
 
-            var backColor = _isHighlighted ? Color.FromArgb(0x00, 0x6D, 0xB7) : Color.White;
+            var backColor = _isHighlighted ? Color.FromArgb(0x00, 0x6D, 0xB7) : IsSelected ? Color.FromArgb(0xCC, 0xE8, 0xFF) : Color.White;
 
             using (Brush br = new SolidBrush(backColor))
             {
@@ -77,9 +79,6 @@ namespace BrowserSelect {
 
             // Draw main text
             DrawMainText(e.Graphics);
-
-            // Draw shortcut
-            DrawShortcutText(e.Graphics);
         }
 
         private void DrawMainText(Graphics g, bool measure = false)
@@ -106,6 +105,7 @@ namespace BrowserSelect {
                                 _mainTextWidth = (int)size.Width;
                             }
                         }
+                        _mainTextWidth += 10;
                     }
                     else
                     {
@@ -136,37 +136,6 @@ namespace BrowserSelect {
                 }
             }
 
-        }
-
-        private void DrawShortcutText(Graphics g, bool measure = false)
-        {
-            var text = "( " + Convert.ToString(_index + 1) + "," + String.Join(",", _browser.shortcuts) + " )";
-
-            var textX = ImageLeftOffset + Padding.Left + ImageWidth + Padding.Left + _mainTextWidth;
-
-            var format = new StringFormat(StringFormatFlags.NoWrap);
-            format.LineAlignment = StringAlignment.Center;
-            format.Alignment = StringAlignment.Far;
-
-            var textRectangle = new RectangleF(textX, Padding.Top, Width - textX, ImageWidth);
-
-            using (var font = new System.Drawing.Font("Segoe UI", 9.0F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0))))
-            {
-                if (measure)
-                {
-                    var size = g.MeasureString(text, font, textRectangle.Location, format);
-                    _shortcutTextWidth = (int)size.Width + 10;
-                }
-                else
-                {
-                    var foreColor = _isHighlighted ? SystemColors.HighlightText : Color.FromKnownColor(KnownColor.GrayText);
-
-                    using (Brush br = new SolidBrush(foreColor))
-                    {
-                        g.DrawString(text, font, br, textRectangle, format);
-                    }
-                }
-            }
         }
 
         protected override void OnMouseClick(MouseEventArgs e)

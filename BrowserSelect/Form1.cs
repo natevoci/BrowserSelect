@@ -16,8 +16,10 @@ namespace BrowserSelect
     {
         // get the list of Borwsers from registry and remove the ones unchecked from settings
         List<Browser> browsers;
+        List<BrowserUCCompact> _compactControls;
 
-        private ButtonsUC buc;
+        private ButtonsUC _buc;
+        private string _selectedBrowser = "";
 
         public Form1()
         {
@@ -30,6 +32,8 @@ namespace BrowserSelect
             if (!Settings.Default.CompactVertical)
             {
                 SuspendLayout();
+                textBoxFilter.Visible = false;
+                this.BackColor = SystemColors.Control;
                 browsers = BrowserFinder.find().Where(b => !Settings.Default.HideBrowsers.Contains(b.Identifier)).ToList();
                 int i = 0;
                 int width = 0;
@@ -42,21 +46,32 @@ namespace BrowserSelect
                 // add browserUC objects to the form
                 foreach (var browser in browsers)
                 {
-                    var buc = new BrowserUC(browser, i);
-                    width = buc.Width;  // buc.Width = 128*dpi Scale
-                    buc.Left = width * i++;
-                    buc.Click += browser_click;
-                    this.Controls.Add(buc);
+                    var bruc = new BrowserUC(browser, i);
+                    width = bruc.Width;  // buc.Width = 128*dpi Scale
+                    bruc.Left = width * i++;
+                    bruc.Click += browser_click;
+                    this.Controls.Add(bruc);
                 }
                 ResumeLayout();
-                buc.Left = i * width;
+                _buc.Top = 0;
+                _buc.Left = i * width;
                 btn_help.Left = i * width;
-                btn_help.Top = buc.Height - btn_help.Height;
+                btn_help.Top = _buc.Height - btn_help.Height;
             }
             else
             {
                 SuspendLayout();
+                textBoxFilter.Visible = true;
+                this.BackColor = Color.White;
+
                 browsers = BrowserFinder.find().Where(b => !Settings.Default.HideBrowsers.Contains(b.Identifier)).ToList();
+                if (textBoxFilter.Text.Length > 0)
+                {
+                    browsers = browsers.Where(b => (
+                        b.name.IndexOf(textBoxFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        b.user.IndexOf(textBoxFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0
+                    )).ToList();
+                }
                 int i = 0;
                 int height = 0;
                 for (int k = Controls.Count - 1; k >= 0; k--)
@@ -66,33 +81,49 @@ namespace BrowserSelect
                         Controls.RemoveAt(k);
                 }
 
-                var bucs = new List<BrowserUCCompact>();
+                bool selectedBrowserFound = false;
+
+                var brucs = new List<BrowserUCCompact>();
+                _compactControls = brucs;
                 foreach (var browser in browsers)
                 {
-                    var buc = new BrowserUCCompact(browser, i);
-                    height = buc.Height;
-                    buc.Top = height * i++;
-                    buc.Selected += browser_click;
-                    buc.BackColor = Color.White;
+                    var bruc = new BrowserUCCompact(browser, i);
+                    height = bruc.Height;
+                    bruc.Top = height * i++ + textBoxFilter.Height;
+                    bruc.Selected += browser_click;
+                    bruc.BackColor = Color.White;
+                    bruc.IsSelected = (browser.Identifier == _selectedBrowser);
+                    selectedBrowserFound |= bruc.IsSelected;
 
-                    this.Controls.Add(buc);
-                    bucs.Add(buc);
+                    this.Controls.Add(bruc);
+                    brucs.Add(bruc);
                 }
 
-                var maxWidth = bucs.Select(b => b.MeasuredWidth).Max();
+                var maxWidth = brucs.Select(b => b.MeasuredWidth).Max();
+
                 this.Width = maxWidth;
 
-                foreach (var buc in bucs)
+                foreach (var bruc in brucs)
                 {
-                    buc.Width = maxWidth;
+                    bruc.Width = maxWidth;
+                }
+
+                if (!selectedBrowserFound && brucs.Count() > 0)
+                {
+                    _selectedBrowser = brucs[0].Browser.Identifier;
+                    brucs[0].IsSelected = true;
                 }
 
                 ResumeLayout();
-                buc.Left = 0;
-                buc.BackColor = Color.White;
+                _buc.Top = textBoxFilter.Height;
+                _buc.Left = 0;
+                _buc.BackColor = Color.White;
                 btn_help.BackColor = Color.White;
                 btn_help.Left = 0;
-                btn_help.Top = buc.Height - btn_help.Height;
+                btn_help.Top = textBoxFilter.Height + _buc.Height - btn_help.Height;
+                this.AutoSize = false;
+                this.Width = maxWidth;
+                this.AutoSize = true;
             }
             center_me();
         }
@@ -111,8 +142,8 @@ namespace BrowserSelect
                 this.Text = Program.url;
             }
             // add vertical buttons to right of form
-            buc = new ButtonsUC(this);
-            this.Controls.Add(buc);
+            _buc = new ButtonsUC(this);
+            this.Controls.Add(_buc);
             this.updateBrowsers();
         }
 
@@ -336,13 +367,16 @@ namespace BrowserSelect
 
         private void Form1_KeyPress(object sender, KeyPressEventArgs e)
         {
-            int i = 1;
-            foreach (var browser in browsers)
+            if (!Settings.Default.CompactVertical)
             {
-                if (browser.shortcuts.Contains(e.KeyChar) || e.KeyChar == (Convert.ToString(i++))[0])
+                int i = 1;
+                foreach (var browser in browsers)
                 {
-                    open_url(browser);
-                    return;
+                    if (browser.shortcuts.Contains(e.KeyChar) || e.KeyChar == (Convert.ToString(i++))[0])
+                    {
+                        open_url(browser);
+                        return;
+                    }
                 }
             }
         }
@@ -351,6 +385,45 @@ namespace BrowserSelect
         {
             if (e.KeyCode == Keys.Escape)
                 Application.Exit();
+
+            if (Settings.Default.CompactVertical)
+            {
+                if (e.KeyCode == Keys.Down)
+                {
+                    var selectedIndex = _compactControls.FindIndex(bruc => bruc.IsSelected);
+                    if (selectedIndex >= 0 && selectedIndex < _compactControls.Count - 1)
+                    {
+                        _selectedBrowser = _compactControls[selectedIndex + 1].Browser.Identifier;
+                        _compactControls[selectedIndex].IsSelected = false;
+                        _compactControls[selectedIndex + 1].IsSelected = true;
+                        _compactControls[selectedIndex].Invalidate();
+                        _compactControls[selectedIndex + 1].Invalidate();
+                    }
+                    e.Handled = true;
+                }
+                if (e.KeyCode == Keys.Up)
+                {
+                    var selectedIndex = _compactControls.FindIndex(bruc => bruc.IsSelected);
+                    if (selectedIndex >= 1)
+                    {
+                        _selectedBrowser = _compactControls[selectedIndex - 1].Browser.Identifier;
+                        _compactControls[selectedIndex].IsSelected = false;
+                        _compactControls[selectedIndex - 1].IsSelected = true;
+                        _compactControls[selectedIndex].Invalidate();
+                        _compactControls[selectedIndex - 1].Invalidate();
+                    }
+                    e.Handled = true;
+                }
+                if (e.KeyCode == Keys.Enter)
+                {
+                    var selectedIndex = _compactControls.FindIndex(bruc => bruc.IsSelected);
+                    if (selectedIndex >= 0)
+                    {
+                        open_url(_compactControls[selectedIndex].Browser);
+                    }
+                    e.Handled = true;
+                }
+            }
         }
 
         private void center_me()
@@ -379,6 +452,11 @@ namespace BrowserSelect
         void btn_update_click(object sender, EventArgs e)
         {
             Program.UpdateDialog();
+        }
+
+        private void textBoxFilter_TextChanged(object sender, EventArgs e)
+        {
+            updateBrowsers();
         }
     }
 }
