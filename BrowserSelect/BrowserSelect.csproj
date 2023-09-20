@@ -124,6 +124,7 @@
     </Compile>
     <Compile Include="IBrowserUC.cs" />
     <Compile Include="IconExtractor.cs" />
+    <Compile Include="Keyboard.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VButton.cs">

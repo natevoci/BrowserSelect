@@ -167,6 +167,11 @@ namespace BrowserSelect
 
                     if (rule_match)
                     {
+                        Thread.Sleep(500);
+                        var alt = Keyboard.IsKeyDown(Keys.Menu); // Alt key
+                        if (alt)
+                            return false;
+
                         System.Diagnostics.Debug.WriteLine(test_uri + " " + match_type + " " + pattern);
                         string browser = (string)rule["Browser"];
                         if (browser != "display BrowserSelect")
@@ -179,6 +184,11 @@ namespace BrowserSelect
                 Settings.Default.DefaultBrowser != "" &&
                 Settings.Default.DefaultBrowser != "display BrowserSelect")
             {
+                Thread.Sleep(500);
+                var alt = Keyboard.IsKeyDown(Keys.Menu); // Alt key
+                if (alt)
+                    return false;
+
                 Form1.open_url((Browser)Settings.Default.DefaultBrowser);
                 return true;
             }
