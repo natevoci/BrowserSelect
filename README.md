@@ -3,6 +3,10 @@ Browser Select is a utility to dynamically select the browser you want instead o
 
 ![screenshot1](https://raw.githubusercontent.com/lucasnz/BrowserSelect/master/screenshots/photo_2016-07-11_13-44-19.png)
 
+or in vertical "Compact mode"
+
+![screenshot1](screenshots/compact-vertical.png)
+
 Instead of having to copy the link, open the desired (non-default) browser then pasting the link, all you need to do is to click on the link and this prompt will open allowing you to choose the browser you want. It automatically detects installed browsers. It does not require administrative rights and can be installed as a restricted user.
 
 ![screenshot 2](https://raw.githubusercontent.com/lucasnz/BrowserSelect/master/screenshots/photo_2015-10-12_16-46-14.jpg)
@@ -56,7 +60,7 @@ Just a list of some ideas that can be integrated into BrowserSelect.
 - [ ] export/import for rules/settings
 - [ ] Sorting browsers on the list
 - [ ] Custom Shortcuts
-- [ ] Ignoring the rules if Alt key is held down when clicking a link
+- [x] Ignoring the rules if Alt key is held down when clicking a link
 - [ ] an API to invoke BrowserSelect
 - [ ] Bugfix for when Browser was launched with Maximize window state (browser select will launch maximized)
 - [ ] A browser extension to launch the correct browser based on the rules even if a link is clicked inside a browser
@@ -72,6 +76,17 @@ Just a list of some ideas that can be integrated into BrowserSelect.
 - [ ] record which browser you select for each domain and provide visual indicator of how often each browser is chosen for this domain
 
 # Changelog
+
+v1.5.1 [21/09/2023]
+- Features:
+  - In Compact mode, Added a text filter instead of shortcut keys to better handle long lists of browsers.
+  - Added the ability to skip rules when opening by holding the Alt key.
+  - In Compact mode, changed the "Always use" option to simply use the full domain name.
+- Bug fixes:
+  - Fixed detection of chrome and edge profiles to only detect root level profiles so that snapshots (which appear as duplicates) are ignored.
+  - Fixed exception when choosing Always option in compact view
+  - Fixed handling of urls with ports
+
 
 v1.5.0 [17/08/2023]
 - New Feature: Compact vertical mode
