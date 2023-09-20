@@ -1,95 +1,91 @@
-name: Build .NET Desktop
+name: Build Branches
 
 on:
   push:
-    tags:
+    branches:
       - '**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        configuration: [Release]
-
     runs-on: windows-latest
-
-    env:
-      Solution_Name: BrowserSelect.sln
 
     permissions:
       contents: write
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    # Read version numbner from assemblyinfo.cs
-    - name: Read assemblyinfo.cs
-      id: assemblyinfo
-      uses: juliangruber/read-file-action@v1
-      with:
-        path: ./BrowserSelect/Properties/AssemblyInfo.cs
-    - uses: kaisugi/action-regex-match@v1.0.0
-      id: version-match
-      with:
-        text: ${{steps.assemblyinfo.outputs.content}}
-        regex: 'AssemblyFileVersion\("(\d+\.\d+\.\d+)'
+      - name: Get Branch name
+        run: |
+          echo "BRANCH_NAME=$(echo $env:GITHUB_REF | sed -e "s|^refs/heads/||" )" >> $env:GITHUB_ENV
+          echo "BRANCH_NAME_NO_SLASHES=$(echo $env:GITHUB_REF | sed -e "s|^refs/heads/||" | sed -e "s|/|_|" )" >> $env:GITHUB_ENV
+      - name: Display branch name
+        run: |
+          echo Branch name: ${{ env.BRANCH_NAME }}
+          echo Branch name without slashes: ${{ env.BRANCH_NAME_NO_SLASHES }}
 
-    # Check tag version number matches
-    - uses: bhowell2/github-substring-action@master
-      id: branch-name
-      with:
-        value: ${{github.ref}}
-        index_of_str: "refs/tags/"
-    - name: Verify tag version matches assemblyinfo
-      uses: cutenode/action-always-fail@v1.0.1
-      if: steps.branch-name.outputs.substring != steps.version-match.outputs.group1
+      # Read version number from assemblyinfo.cs
+      - name: Get Version
+        run: |
+          (cat ./BrowserSelect/Properties/AssemblyInfo.cs | sls "AssemblyFileVersion") -match "AssemblyFileVersion\(`"([0-9]+\.[0-9]+\.[0-9]+)"
+          echo "VERSION=$($matches[1])"
+          echo "VERSION=$($matches[1])" >> $env:GITHUB_ENV
+      - name: Display version
+        run: echo "Version is ${{ env.VERSION }}"
 
-    # Update app.config
-    - name: Replace GithubRepo name
-      uses: thiagodnf/string-replacer@v1.0.2
-      with:
-        find: natevoci/BrowserSelect
-        replace: ${{ github.repository }}
-        include: BrowserSelect/app.config
+      # Update app.config
+      - name: Replace GithubRepo name
+        uses: thiagodnf/string-replacer@v1.0.2
+        with:
+          find: natevoci/BrowserSelect
+          replace: ${{ github.repository }}
+          include: BrowserSelect/app.config
 
-    # Build solution
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1.3.1
-    - name: Build the application
-      run: msbuild $env:Solution_Name /t:Build /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{matrix.configuration}}
+      # Build solution
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1.3.1
+      - name: Build the application
+        run: msbuild BrowserSelect.sln /t:Build /p:Configuration=Release
 
-    # Build installer
-    - name: Create nsis installer
-      uses: joncloud/makensis-action@publish
-      with:
-        script-file: BrowserSelect/installer.nsi
-    - name: Rename installer
-      run: mv BrowserSelect/BrowserSelect.exe BrowserSelect/BrowserSelectInstaller-${{steps.version-match.outputs.group1}}.exe
+      # Build installer
+      - name: Create nsis installer
+        uses: joncloud/makensis-action@publish
+        with:
+          script-file: BrowserSelect/installer.nsi
+      - name: Rename installer
+        run: mv BrowserSelect/BrowserSelect.exe BrowserSelect/BrowserSelectInstaller-${{ env.VERSION }}.exe
 
-    # Create Zip
-    - name: Zip Release
-      uses: thedoctor0/zip-release@master
-      with:
-        type: zip
-        filename: BrowserSelect-${{steps.version-match.outputs.group1}}.zip
-        directory: BrowserSelect/bin/Release
-        exclusions: '*.pdb'
+      # Create Zip
+      - name: Zip Release
+        uses: thedoctor0/zip-release@master
+        with:
+          type: zip
+          filename: BrowserSelect-${{ env.VERSION }}.zip
+          directory: BrowserSelect/bin/Release
+          exclusions: '*.pdb'
 
-    # Create Release
-    - name: Upload Release
-      uses: ncipollo/release-action@main
-      with:
-        name: Release ${{steps.version-match.outputs.group1}}
-        allowUpdates: true
-        prerelease: false
-        removeArtifacts: true
-        replacesArtifacts: true
-        artifactErrorsFailBuild: true
-        artifacts: "BrowserSelect/BrowserSelectInstaller-${{steps.version-match.outputs.group1}}.exe,BrowserSelect/bin/Release/BrowserSelect-${{steps.version-match.outputs.group1}}.zip"
-        artifactContentType: application/zip
-        token: ${{secrets.GITHUB_TOKEN}}
+      # Create Release
+      - name: Create or Update tag
+        run: |
+          git tag -f ${{ env.VERSION }}_${{ env.BRANCH_NAME_NO_SLASHES }}_Release
+          git push -f origin ${{ env.VERSION }}_${{ env.BRANCH_NAME_NO_SLASHES }}_Release
+
+      - name: Upload Release
+        uses: ncipollo/release-action@main
+        with:
+          name: Release ${{ env.VERSION }}
+          tag: ${{ env.VERSION }}_${{ env.BRANCH_NAME_NO_SLASHES }}_Release
+          allowUpdates: true
+          prerelease: false
+          removeArtifacts: true
+          replacesArtifacts: true
+          artifactErrorsFailBuild: true
+          artifacts: "BrowserSelect/BrowserSelectInstaller-${{ env.VERSION }}.exe,BrowserSelect/bin/Release/BrowserSelect-${{ env.VERSION }}.zip"
+          artifactContentType: application/zip
+          token: ${{secrets.GITHUB_TOKEN}}

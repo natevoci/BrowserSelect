@@ -1,0 +1,98 @@
+name: Build Tags
+
+on:
+  # push:
+  #   tags:
+  #     - '**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Release]
+
+    runs-on: windows-latest
+
+    env:
+      Solution_Name: BrowserSelect.sln
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    # Read version numbner from assemblyinfo.cs
+    - name: Read assemblyinfo.cs
+      id: assemblyinfo
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: ./BrowserSelect/Properties/AssemblyInfo.cs
+    - uses: kaisugi/action-regex-match@v1.0.0
+      id: version-match
+      with:
+        text: ${{steps.assemblyinfo.outputs.content}}
+        regex: 'AssemblyFileVersion\("(\d+\.\d+\.\d+)'
+
+    # Check tag version number matches
+    - uses: bhowell2/github-substring-action@master
+      id: branch-name
+      with:
+        value: ${{github.ref}}
+        index_of_str: "refs/tags/"
+    - name: Verify tag version matches assemblyinfo
+      uses: cutenode/action-always-fail@v1.0.1
+      if: steps.branch-name.outputs.substring != steps.version-match.outputs.group1
+
+    # Update app.config
+    - name: Replace GithubRepo name
+      uses: thiagodnf/string-replacer@v1.0.2
+      with:
+        find: natevoci/BrowserSelect
+        replace: ${{ github.repository }}
+        include: BrowserSelect/app.config
+
+    # Build solution
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.3.1
+    - name: Build the application
+      run: msbuild $env:Solution_Name /t:Build /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{matrix.configuration}}
+
+    # Build installer
+    - name: Create nsis installer
+      uses: joncloud/makensis-action@publish
+      with:
+        script-file: BrowserSelect/installer.nsi
+    - name: Rename installer
+      run: mv BrowserSelect/BrowserSelect.exe BrowserSelect/BrowserSelectInstaller-${{steps.version-match.outputs.group1}}.exe
+
+    # Create Zip
+    - name: Zip Release
+      uses: thedoctor0/zip-release@master
+      with:
+        type: zip
+        filename: BrowserSelect-${{steps.version-match.outputs.group1}}.zip
+        directory: BrowserSelect/bin/Release
+        exclusions: '*.pdb'
+
+    # Create Release
+    - name: Upload Release
+      uses: ncipollo/release-action@main
+      with:
+        name: Release ${{steps.version-match.outputs.group1}}
+        allowUpdates: true
+        prerelease: false
+        removeArtifacts: true
+        replacesArtifacts: true
+        artifactErrorsFailBuild: true
+        artifacts: "BrowserSelect/BrowserSelectInstaller-${{steps.version-match.outputs.group1}}.exe,BrowserSelect/bin/Release/BrowserSelect-${{steps.version-match.outputs.group1}}.zip"
+        artifactContentType: application/zip
+        token: ${{secrets.GITHUB_TOKEN}}
