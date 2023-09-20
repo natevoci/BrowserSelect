@@ -183,9 +183,13 @@ namespace BrowserSelect
         private static List<string> FindChromeProfiles(string ChromeUserDataDir, string IconFilename)
         {
             List<string> Profiles = new List<string>();
-            var ProfileDirs = Directory.GetFiles(ChromeUserDataDir, IconFilename, SearchOption.AllDirectories).Select(Path.GetDirectoryName);
+            var ProfileDirs = Directory.GetDirectories(ChromeUserDataDir, $"Default").ToList();
+            ProfileDirs.AddRange(Directory.GetDirectories(ChromeUserDataDir, "Profile *"));
             foreach (var Profile in ProfileDirs)
             {
+                if (!File.Exists($"{Profile}\\{IconFilename}"))
+                    continue;
+
                 Profiles.Add(Profile.Substring(ChromeUserDataDir.Length + 1));
             }
             return Profiles;
