@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Security.Policy;
 using System.Windows.Forms;
 using BrowserSelect.Properties;
 using Newtonsoft.Json;
@@ -65,12 +66,10 @@ namespace BrowserSelect
                         Controls.RemoveAt(k);
                 }
 
-                var alwaysDomain = _alwaysRule.mode != 2 ? _alwaysRule.tld_rule : _alwaysRule.second_rule;
-
                 var bucs = new List<BrowserUCCompact>();
                 foreach (var browser in browsers)
                 {
-                    var buc = new BrowserUCCompact(browser, i, alwaysDomain);
+                    var buc = new BrowserUCCompact(browser, i);
                     height = buc.Height;
                     buc.Top = height * i++;
                     buc.Selected += browser_click;
@@ -137,28 +136,36 @@ namespace BrowserSelect
         private ContextMenu _alwaysAsk;
         public void add_rule(Browser b)
         {
-            // check if desired pattern is ambiguous
-            if (_alwaysRule.mode == 3)
+            if (!Settings.Default.CompactVertical)
             {
-                // generate a context menu with tld_rule and second_rule as options
-                // and call the overloaded add_rule with pattern as second arg on click
-                _alwaysAsk = new ContextMenu((new[] { _alwaysRule.tld_rule, _alwaysRule.second_rule })
-                    .Select(x => new MenuItem(x, (s, e) => add_rule(b, x))).ToArray());
-                // display the context menu at mouse position
-                _alwaysAsk.Show(this, PointToClient(Cursor.Position));
-            }
-            else if (_alwaysRule.mode == 0)
-            {
-                // in case ambiguousness of pattern was not determined, should not happen
-                MessageBox.Show(String.Format("Error while generating pattern from url." +
-                    " Please include the following url in your bug report:\n{0}",
-                    Program.url));
+                // check if desired pattern is ambiguous
+                if (_alwaysRule.mode == 3)
+                {
+                    // generate a context menu with tld_rule and second_rule as options
+                    // and call the overloaded add_rule with pattern as second arg on click
+                    _alwaysAsk = new ContextMenu((new[] { _alwaysRule.tld_rule, _alwaysRule.second_rule })
+                        .Select(x => new MenuItem(x, (s, e) => add_rule(b, x))).ToArray());
+                    // display the context menu at mouse position
+                    _alwaysAsk.Show(this, PointToClient(Cursor.Position));
+                }
+                else if (_alwaysRule.mode == 0)
+                {
+                    // in case ambiguousness of pattern was not determined, should not happen
+                    MessageBox.Show(String.Format("Error while generating pattern from url." +
+                        " Please include the following url in your bug report:\n{0}",
+                        Program.url));
+                }
+                else
+                {
+                    // in case pattern was not ambiguous, just set the pattern as rule and open the url
+                    var pat = (_alwaysRule.mode == 1) ? _alwaysRule.tld_rule : _alwaysRule.second_rule;
+                    add_rule(b, pat);
+                }
             }
             else
             {
-                // in case pattern was not ambiguous, just set the pattern as rule and open the url
-                var pat = (_alwaysRule.mode == 1) ? _alwaysRule.tld_rule : _alwaysRule.second_rule;
-                add_rule(b, pat);
+                var domain = new Uri(Program.url).Authority;
+                add_rule(b, domain);
             }
         }
 
@@ -172,7 +179,7 @@ namespace BrowserSelect
         {
             // add a rule and save app settings
             DataTable rules;
-            if (Settings.Default.Rules != null && Settings.Default.Rules != "")
+            if (Settings.Default.Rules != null && Settings.Default.Rules != "" && Settings.Default.Rules != "[]")
                 rules = (DataTable)JsonConvert.DeserializeObject(Settings.Default.Rules, (typeof(DataTable)));
             else
             {
@@ -212,7 +219,7 @@ namespace BrowserSelect
             */
 
             // needed variables
-            var domain = new Uri(url).Host;
+            var domain = new Uri(url).Authority;
             var parts = domain.Split('.');
             var count = parts.Length;
             var tld = parts.Last();

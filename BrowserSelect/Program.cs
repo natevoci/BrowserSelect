@@ -134,7 +134,7 @@ namespace BrowserSelect
 
                     string test_uri = "";
                     if (match == "Domain")
-                        test_uri = uri.Host;
+                        test_uri = uri.Authority;
                     else if (match == "URL Path")
                         test_uri = uri.PathAndQuery;
                     else if (match == "Full URL")
@@ -236,8 +236,8 @@ namespace BrowserSelect
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine("URLExpander: " + uri.Host);
-            if (uri.Host.EndsWith("safelinks.protection.outlook.com") &&
+            System.Diagnostics.Debug.WriteLine("URLExpander: " + uri.Authority);
+            if (uri.Authority.EndsWith("safelinks.protection.outlook.com") &&
                 enabled_url_expanders.Contains("safelinks.protection.outlook.com"))
             {
                 var queryDict = HttpUtility.ParseQueryString(uri.Query);
@@ -257,11 +257,11 @@ namespace BrowserSelect
             {
                 return uri;
             }
-            System.Diagnostics.Debug.WriteLine("Url " + num_redirects + " " + uri.Host);
+            System.Diagnostics.Debug.WriteLine("Url " + num_redirects + " " + uri.Authority);
             StringCollection url_shortners = Settings.Default.URLShortners;
             Form SplashScreen = null;
             if (!Program.uriExpanderThreadStop &&
-                (url_shortners.Contains(uri.Host) || Settings.Default.ExpandUrl == "Follow all redirects"))
+                (url_shortners.Contains(uri.Authority) || Settings.Default.ExpandUrl == "Follow all redirects"))
             {
                 //Thread.Sleep(2000);
                 if (num_redirects == 0)

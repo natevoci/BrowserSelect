@@ -13,7 +13,6 @@ namespace BrowserSelect {
     {
         private Browser _browser;
         private int _index = 0;
-        private string _alwaysDomain;
 
         private int _mainTextWidth = 0;
         private int _shortcutTextWidth = 0;
@@ -36,10 +35,9 @@ namespace BrowserSelect {
         public event EventHandler Selected;
 
 
-        public BrowserUCCompact(Browser b,int index, string alwaysDomain) {
+        public BrowserUCCompact(Browser b,int index) {
             this._browser = b;
             this._index = index;
-            this._alwaysDomain = alwaysDomain;
 
             InitializeComponent();
             SetStyle(ControlStyles.UserPaint, true);
@@ -199,7 +197,8 @@ namespace BrowserSelect {
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
-            alwaysUseThisBrowserForThisDomainToolStripMenuItem.Text = "Always use " + this._browser.name + " for " + _alwaysDomain;
+            var domain = new Uri(Program.url).Authority;
+            alwaysUseThisBrowserForThisDomainToolStripMenuItem.Text = "Always use " + this._browser.name + " for " + domain;
         }
     }
 }
