@@ -47,6 +47,12 @@ namespace BrowserSelect {
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
 
+            // If no uri is loaded disable the the right click menu
+            if (Program.uri == null)
+            {
+                this.ContextMenuStrip = null;
+            }
+
             this.Padding = new Padding(2);
 
             // Measure texts
@@ -166,8 +172,7 @@ namespace BrowserSelect {
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
-            var domain = new Uri(Program.url).Authority;
-            alwaysUseThisBrowserForThisDomainToolStripMenuItem.Text = "Always use " + this._browser.name + " for " + domain;
+            alwaysUseThisBrowserForThisDomainToolStripMenuItem.Text = "Always use " + this._browser.name + " for " + Program.uri.Authority;
         }
     }
 }

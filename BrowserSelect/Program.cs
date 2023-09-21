@@ -16,7 +16,7 @@ namespace BrowserSelect
 {
     static class Program
     {
-        public static string url = "";
+        public static Uri uri = null;
         public static HttpWebRequest webRequestThread = null;
         public static bool uriExpanderThreadStop = false;
         public static string currentVer = "";
@@ -78,26 +78,46 @@ namespace BrowserSelect
             Task taskForm = null;
 
             //checking if a url is being opened or app is ran from start menu (without arguments)
-            Boolean loadedBrowser = false;
-            if (args.Length > 0)
+            bool loadedBrowser = false;
+            uri = null;
+
+            if (args.Length == 0)
+            {
+                try
+                {
+                    uri = new Uri(Clipboard.GetText());
+                }
+                catch
+                {
+                    uri = null;
+                }
+            }
+            else
+            {
+                //Parse url, and add http:// to url if it is missing a protocol
+                uri = !string.IsNullOrEmpty(args[0]) ? new UriBuilder(args[0]).Uri : null;
+            }
+            
+            if (uri != null)
             {
                 //check to see if auto select rules match
-                url = args[0];
-                //add http:// to url if it is missing a protocol
-                var uri = new UriBuilder(url).Uri;
                 uri = UriExpander(uri);
                 if (Settings.Default.ExpandUrl != null && Settings.Default.ExpandUrl != "Never")
                     uri = UriFollowRedirects(uri);
-                url = uri.AbsoluteUri;
+            }
 
+            // Only run the rules if the url was passed as an argument
+            if (args.Length > 0 && uri != null)
+            {
                 //if we loaded the browser finish execution here...
                 loadedBrowser = load_browser(uri);
             }
+
             Form form = null;
             if (!loadedBrowser)
             {
                 // display main form
-                if (url == "" && (Boolean)Settings.Default.LaunchToSettings)
+                if (uri == null && (Boolean)Settings.Default.LaunchToSettings)
                     form = new frm_settings();
                 else
                     form = new Form1();

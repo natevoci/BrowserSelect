@@ -80,6 +80,7 @@ Just a list of some ideas that can be integrated into BrowserSelect.
 v1.5.1 [21/09/2023]
 - Features:
   - Added the ability to skip rules when opening by holding the Alt key within the first 500ms.
+  - Added support for loading the url from the clipboard if no argument is passed
 - Compact mode features:
   - Added a text filter instead of shortcut keys to better handle long lists of browsers.
   - Changed the "Always use" option to simply use the full domain name.

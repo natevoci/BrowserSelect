@@ -110,11 +110,13 @@ namespace BrowserSelect
 
                 if (!selectedBrowserFound && brucs.Count() > 0)
                 {
-                    var domain = new Uri(Program.url).Authority;
-                    var history = string.IsNullOrEmpty(Settings.Default.History) ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(Settings.Default.History);
-
                     var lastUsedBrowserIdentifier = string.Empty;
-                    history.TryGetValue(domain, out lastUsedBrowserIdentifier);
+                    var domain = Program.uri?.Authority;
+                    if (domain != null)
+                    {
+                        var history = string.IsNullOrEmpty(Settings.Default.History) ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(Settings.Default.History);
+                        history.TryGetValue(domain, out lastUsedBrowserIdentifier);
+                    }
 
                     BrowserUCCompact lastUsedBrowser = string.IsNullOrEmpty(lastUsedBrowserIdentifier) ? null : brucs.Find(b => b.Browser.Identifier == lastUsedBrowserIdentifier);
                     if (lastUsedBrowser == null)
@@ -146,10 +148,10 @@ namespace BrowserSelect
             // set the form icon from .exe file icon
             this.Icon = IconExtractor.fromFile(Application.ExecutablePath);
             // create a wildcard rule for this domain (always button)
-            if (Program.url != "")
+            if (Program.uri != null)
             {
-                _alwaysRule = generate_rule(Program.url);
-                this.Text = Program.url;
+                _alwaysRule = generate_rule(Program.uri);
+                this.Text = Program.uri.AbsoluteUri;
             }
             // add vertical buttons to right of form
             _buc = new ButtonsUC(this);
@@ -194,7 +196,7 @@ namespace BrowserSelect
                     // in case ambiguousness of pattern was not determined, should not happen
                     MessageBox.Show(String.Format("Error while generating pattern from url." +
                         " Please include the following url in your bug report:\n{0}",
-                        Program.url));
+                        Program.uri.AbsoluteUri));
                 }
                 else
                 {
@@ -205,7 +207,7 @@ namespace BrowserSelect
             }
             else
             {
-                var domain = new Uri(Program.url).Authority;
+                var domain = Program.uri?.Authority;
                 add_rule(b, domain);
             }
         }
@@ -237,7 +239,7 @@ namespace BrowserSelect
             Settings.Default.Save();
         }
 
-        public static AmbiguousRule generate_rule(string url)
+        public static AmbiguousRule generate_rule(Uri uri)
         {
             /*
             to solve issue #13
@@ -260,7 +262,7 @@ namespace BrowserSelect
             */
 
             // needed variables
-            var domain = new Uri(url).Authority;
+            var domain = uri.Authority;
             var parts = domain.Split('.');
             var count = parts.Length;
             var tld = parts.Last();
@@ -335,20 +337,24 @@ namespace BrowserSelect
             if (saveHistory)
             {
                 var history = string.IsNullOrEmpty(Settings.Default.History) ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(Settings.Default.History);
-                var domain = new Uri(Program.url).Authority;
-                history[domain] = b.Identifier;
-                Settings.Default.History = JsonConvert.SerializeObject(history);
-                Settings.Default.Save();
+                var domain = Program.uri?.Authority;
+                if (domain != null)
+                {
+                    history[domain] = b.Identifier;
+                    Settings.Default.History = JsonConvert.SerializeObject(history);
+                    Settings.Default.Save();
+                }
             }
 
-           var args = new List<string>();
+            var url = Program.uri?.AbsoluteUri ?? string.Empty;
+            var args = new List<string>();
             if (!string.IsNullOrEmpty(b.additionalArgs))
                 args.Add(b.additionalArgs);
             if (incognito)
                 args.Add(b.private_arg);
             if (b.exec.ToLower().EndsWith("brave.exe"))
                 args.Add("--");
-            args.Add(Program.url.Replace("\"", "%22"));
+            args.Add(url.Replace("\"", "%22"));
 
             if (b.exec.EndsWith("iexplore.exe") && !incognito)
             {
@@ -360,7 +366,7 @@ namespace BrowserSelect
                 {
                     if (iExplorer.Name.EndsWith("Internet Explorer"))
                     {
-                        iExplorer.Navigate(Program.url, 0x800);
+                        iExplorer.Navigate(url, 0x800);
                         // for issue #10 (bring IE to focus after opening link)
                         ForegroundAgent.RestoreWindow(iExplorer.HWND);
                         found = true;
