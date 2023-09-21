@@ -76,11 +76,20 @@ jobs:
           git tag -f ${{ env.VERSION }}_${{ env.BRANCH_NAME_NO_SLASHES }}_Release
           git push -f origin ${{ env.VERSION }}_${{ env.BRANCH_NAME_NO_SLASHES }}_Release
 
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          validation_level: warn
+          version: ${{ env.VERSION }}
+          path: ./CHANGELOG.md
+
       - name: Upload Release
         uses: ncipollo/release-action@main
         with:
           name: Release ${{ env.VERSION }}
           tag: ${{ env.VERSION }}_${{ env.BRANCH_NAME_NO_SLASHES }}_Release
+          body: ${{ steps.changelog_reader.outputs.changes }}
           allowUpdates: true
           prerelease: false
           removeArtifacts: true
