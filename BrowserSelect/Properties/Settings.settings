@@ -47,5 +47,8 @@
     <Setting Name="GithubRepo" Type="System.String" Scope="Application">
       <Value Profile="(Default)">natevoci/BrowserSelect</Value>
     </Setting>
+    <Setting Name="History" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

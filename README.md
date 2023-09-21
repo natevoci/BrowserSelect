@@ -79,9 +79,11 @@ Just a list of some ideas that can be integrated into BrowserSelect.
 
 v1.5.1 [21/09/2023]
 - Features:
-  - In Compact mode, Added a text filter instead of shortcut keys to better handle long lists of browsers.
-  - Added the ability to skip rules when opening by holding the Alt key.
-  - In Compact mode, changed the "Always use" option to simply use the full domain name.
+  - Added the ability to skip rules when opening by holding the Alt key within the first 500ms.
+- Compact mode features:
+  - Added a text filter instead of shortcut keys to better handle long lists of browsers.
+  - Changed the "Always use" option to simply use the full domain name.
+  - Added auto selection of the browser last used for the domain of the url. This allows simply pressing Enter to load in the last used browser.
 - Bug fixes:
   - Fixed detection of chrome and edge profiles to only detect root level profiles so that snapshots (which appear as duplicates) are ignored.
   - Fixed exception when choosing Always option in compact view

@@ -175,7 +175,7 @@ namespace BrowserSelect
                         System.Diagnostics.Debug.WriteLine(test_uri + " " + match_type + " " + pattern);
                         string browser = (string)rule["Browser"];
                         if (browser != "display BrowserSelect")
-                            Form1.open_url((Browser)browser);
+                            Form1.open_url((Browser)browser, false, false);
                         return true;
                     }
                 }
@@ -189,7 +189,7 @@ namespace BrowserSelect
                 if (alt)
                     return false;
 
-                Form1.open_url((Browser)Settings.Default.DefaultBrowser);
+                Form1.open_url((Browser)Settings.Default.DefaultBrowser, false, false);
                 return true;
             }
             return false;

@@ -110,8 +110,18 @@ namespace BrowserSelect
 
                 if (!selectedBrowserFound && brucs.Count() > 0)
                 {
-                    _selectedBrowser = brucs[0].Browser.Identifier;
-                    brucs[0].IsSelected = true;
+                    var domain = new Uri(Program.url).Authority;
+                    var history = string.IsNullOrEmpty(Settings.Default.History) ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(Settings.Default.History);
+
+                    var lastUsedBrowserIdentifier = string.Empty;
+                    history.TryGetValue(domain, out lastUsedBrowserIdentifier);
+
+                    BrowserUCCompact lastUsedBrowser = string.IsNullOrEmpty(lastUsedBrowserIdentifier) ? null : brucs.Find(b => b.Browser.Identifier == lastUsedBrowserIdentifier);
+                    if (lastUsedBrowser == null)
+                        lastUsedBrowser = brucs[0];
+
+                    _selectedBrowser = lastUsedBrowser.Browser.Identifier;
+                    lastUsedBrowser.IsSelected = true;
                 }
 
                 ResumeLayout();
@@ -315,14 +325,23 @@ namespace BrowserSelect
             if (uc.Always)
                 add_rule(uc.Browser);
             else if ((ModifierKeys & Keys.Shift) != 0 || (ModifierKeys & Keys.Alt) != 0)    // open in incognito
-                open_url(uc.Browser, true);
+                open_url(uc.Browser, true, false);
             else
                 open_url(uc.Browser);
         }
 
-        public static void open_url(Browser b, bool incognito = false)
+        public static void open_url(Browser b, bool incognito = false, bool saveHistory = true)
         {
-            var args = new List<string>();
+            if (saveHistory)
+            {
+                var history = string.IsNullOrEmpty(Settings.Default.History) ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(Settings.Default.History);
+                var domain = new Uri(Program.url).Authority;
+                history[domain] = b.Identifier;
+                Settings.Default.History = JsonConvert.SerializeObject(history);
+                Settings.Default.Save();
+            }
+
+           var args = new List<string>();
             if (!string.IsNullOrEmpty(b.additionalArgs))
                 args.Add(b.additionalArgs);
             if (incognito)
