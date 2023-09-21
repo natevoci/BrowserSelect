@@ -5,8 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.1] - 21/09/2023
+## [1.5.2] - 21/09/2023
+### Fixed
+- Fixed exception in filtering for browsers without a logged in user.
+- Fixed scrolling for long lists of profiles
+- Fixed help button position
 
+## [1.5.1] - 21/09/2023
 ### Added
 - Added the ability to skip rules when opening by holding the Alt key within the first 500ms.
 - Added support for loading the url from the clipboard if no argument is passed
@@ -21,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [1.5.0] - 17/08/2023
-
 ### Added
 - New Feature: Compact vertical mode
   - Includes display of username of chrome and edge profiles to help distinguish them

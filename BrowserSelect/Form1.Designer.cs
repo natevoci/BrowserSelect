@@ -31,7 +31,6 @@
             // 
             // btn_help
             // 
-            this.btn_help.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.btn_help.BackgroundImage = global::BrowserSelect.Properties.Resources.Button_help_icon;
             this.btn_help.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btn_help.Cursor = System.Windows.Forms.Cursors.Hand;
@@ -59,6 +58,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScroll = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(124, 181);
             this.Controls.Add(this.textBoxFilter);

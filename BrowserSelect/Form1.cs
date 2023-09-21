@@ -69,7 +69,7 @@ namespace BrowserSelect
                 {
                     browsers = browsers.Where(b => (
                         b.name.IndexOf(textBoxFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        b.user.IndexOf(textBoxFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0
+                        (b.user?.IndexOf(textBoxFilter.Text, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0
                     )).ToList();
                 }
                 int i = 0;
@@ -81,6 +81,9 @@ namespace BrowserSelect
                         Controls.RemoveAt(k);
                 }
 
+                this.AutoSize = true;
+
+                var totalHeight = textBoxFilter.Height;
                 bool selectedBrowserFound = false;
 
                 var brucs = new List<BrowserUCCompact>();
@@ -97,6 +100,8 @@ namespace BrowserSelect
 
                     this.Controls.Add(bruc);
                     brucs.Add(bruc);
+
+                    totalHeight += bruc.Height;
                 }
 
                 var maxWidth = brucs.Select(b => b.MeasuredWidth).Max();
@@ -134,8 +139,13 @@ namespace BrowserSelect
                 btn_help.Left = 0;
                 btn_help.Top = textBoxFilter.Height + _buc.Height - btn_help.Height;
                 this.AutoSize = false;
-                this.Width = maxWidth;
-                this.AutoSize = true;
+
+                var maxHeight = (int)(Screen.FromPoint(new Point(Cursor.Position.X, Cursor.Position.Y)).WorkingArea.Height * 0.8);
+                var targetHeight = totalHeight + this.Height - this.ClientSize.Height + 10;
+                targetHeight = Math.Max(Math.Min(targetHeight, maxHeight), 280);
+                this.Height = targetHeight;
+
+                this.Width = maxWidth + this.Width - this.ClientSize.Width;
             }
             center_me();
         }
@@ -413,29 +423,24 @@ namespace BrowserSelect
 
             if (Settings.Default.CompactVertical)
             {
-                if (e.KeyCode == Keys.Down)
+                if ((e.KeyCode == Keys.Down) || (e.KeyCode == Keys.Up))
                 {
                     var selectedIndex = _compactControls.FindIndex(bruc => bruc.IsSelected);
-                    if (selectedIndex >= 0 && selectedIndex < _compactControls.Count - 1)
+
+                    var targetIndex = (e.KeyCode == Keys.Down) ? selectedIndex + 1 : selectedIndex - 1;
+                    targetIndex = Math.Min(targetIndex, _compactControls.Count - 1);
+                    targetIndex = Math.Max(targetIndex, 0);
+
+                    if (targetIndex != selectedIndex)
                     {
-                        _selectedBrowser = _compactControls[selectedIndex + 1].Browser.Identifier;
-                        _compactControls[selectedIndex].IsSelected = false;
-                        _compactControls[selectedIndex + 1].IsSelected = true;
-                        _compactControls[selectedIndex].Invalidate();
-                        _compactControls[selectedIndex + 1].Invalidate();
-                    }
-                    e.Handled = true;
-                }
-                if (e.KeyCode == Keys.Up)
-                {
-                    var selectedIndex = _compactControls.FindIndex(bruc => bruc.IsSelected);
-                    if (selectedIndex >= 1)
-                    {
-                        _selectedBrowser = _compactControls[selectedIndex - 1].Browser.Identifier;
-                        _compactControls[selectedIndex].IsSelected = false;
-                        _compactControls[selectedIndex - 1].IsSelected = true;
-                        _compactControls[selectedIndex].Invalidate();
-                        _compactControls[selectedIndex - 1].Invalidate();
+                        var selectedControl = _compactControls[selectedIndex];
+                        var targetControl = _compactControls[targetIndex];
+                        _selectedBrowser = targetControl.Browser.Identifier;
+                        selectedControl.IsSelected = false;
+                        targetControl.IsSelected = true;
+                        selectedControl.Invalidate();
+                        targetControl.Invalidate();
+                        this.ScrollControlIntoView(targetControl);
                     }
                     e.Handled = true;
                 }
