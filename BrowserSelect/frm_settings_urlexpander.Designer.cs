@@ -156,6 +156,7 @@ namespace BrowserSelect
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "frm_settings_urlexpander";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "URL Expander Config";
             this.Load += new System.EventHandler(this.frm_settings_urlexpander_Load);
             ((System.ComponentModel.ISupportInitialize)(this.gv_url_shortners)).EndInit();

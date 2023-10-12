@@ -44,6 +44,9 @@ namespace BrowserSelect
                     Settings.Default.HideBrowsers = new StringCollection();
                 if (Settings.Default.AutoBrowser == null)
                     Settings.Default.AutoBrowser = new StringCollection();
+                if (!Settings.Default.URLShortners.Contains("*.sendgrid.net"))
+                    Settings.Default.URLShortners.Add("*.sendgrid.net");
+
                 Settings.Default.Save();
             }
             currentVer = ((Func<String, String>)((x) => x.Substring(0, x.Length - 2)))(Application.ProductVersion);
@@ -288,10 +291,13 @@ namespace BrowserSelect
                 return uri;
             }
             System.Diagnostics.Debug.WriteLine("Url " + num_redirects + " " + uri.Authority);
-            StringCollection url_shortners = Settings.Default.URLShortners;
+            var url_shortners = Settings.Default.URLShortners.Cast<string>();
             Form SplashScreen = null;
-            if (!Program.uriExpanderThreadStop &&
-                (url_shortners.Contains(uri.Authority) || Settings.Default.ExpandUrl == "Follow all redirects"))
+
+            var shouldMakeRequest = (Settings.Default.ExpandUrl == "Follow all redirects") ||
+                url_shortners.Where(u => WildcardMatches(u, uri.Authority)).Any();
+
+            if (!Program.uriExpanderThreadStop && shouldMakeRequest)
             {
                 //Thread.Sleep(2000);
                 if (num_redirects == 0)
@@ -489,6 +495,17 @@ namespace BrowserSelect
                     request.Abort();
                 }
             }
+        }
+
+        private static bool WildcardMatches(string wildcardPattern, string value)
+        {
+            var p = Regex.Escape(wildcardPattern);
+
+            p = p.Replace("\\*\\.", ".*");
+            p = p.Replace("\\.\\*", ".*");
+            p = p.Replace("\\*", ".*");
+
+            return Regex.IsMatch(value, p);
         }
     }
 }
