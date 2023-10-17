@@ -136,6 +136,8 @@ namespace BrowserSelect
                 //Check for Chrome Profiles
                 AddChromeProfiles(browsers, "Google Chrome", "Chrome", @"Google\Chrome\User Data", "Google Profile.ico");
 
+                browsers = browsers.OrderBy(x => x.name).ToList();
+
                 System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(browsers));
                 Properties.Settings.Default.BrowserList = JsonConvert.SerializeObject(browsers);
                 Properties.Settings.Default.Save();
@@ -170,7 +172,6 @@ namespace BrowserSelect
                         });
                     }
                     browsers.Remove(BrowserChrome);
-                    browsers = browsers.OrderBy(x => x.name).ToList();
                 }
             }
         }
