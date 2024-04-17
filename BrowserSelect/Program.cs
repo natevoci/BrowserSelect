@@ -399,7 +399,8 @@ namespace BrowserSelect
                     if (response.Headers["Location"] != null)
                     {
                         string locationResponse = response.Headers["Location"].Split('/').Last();
-                        Boolean isNumeric = true;
+                        locationResponse = locationResponse.Split('_').First();
+                        bool isNumeric = true;
                         foreach (var num in locationResponse.Split('.'))
                         {
                             if (!int.TryParse(num, out _))
