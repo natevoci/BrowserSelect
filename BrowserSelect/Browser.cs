@@ -156,14 +156,22 @@ namespace BrowserSelect
 
                 if (ChromeProfiles.Count > 1)
                 {
+                    dynamic LocalState = JObject.Parse(File.ReadAllText(ChromeUserDataDir + @"\Local State"));
+
                     //add the Chrome instances and remove the default one
                     foreach (string Profile in ChromeProfiles)
                     {
                         dynamic ProfilePreferences = JObject.Parse(File.ReadAllText(ChromeUserDataDir + "\\" + Profile + @"\Preferences"));
 
+                        string profileName = LocalState.profile.info_cache[Profile].name;
+                        if (ProfilePreferences.profile.name != profileName)
+                        {
+                            profileName += " (" + ProfilePreferences.profile.name + ")";
+                        }
+
                         browsers.Add(new Browser()
                         {
-                            name = BrowserName + " (" + ProfilePreferences.profile.name + ")",
+                            name = profileName,
                             profile = Profile,
                             user = (ProfilePreferences.account_info != null && ProfilePreferences.account_info.Count > 0) ? ProfilePreferences.account_info[0].email : "",
                             exec = BrowserChrome.exec,
