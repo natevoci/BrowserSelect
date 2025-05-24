@@ -44,6 +44,8 @@ namespace BrowserSelect
                     Settings.Default.HideBrowsers = new StringCollection();
                 if (Settings.Default.AutoBrowser == null)
                     Settings.Default.AutoBrowser = new StringCollection();
+                if (Settings.Default.URLShortners == null)
+                    Settings.Default.URLShortners = new StringCollection();
                 if (!Settings.Default.URLShortners.Contains("*.sendgrid.net"))
                     Settings.Default.URLShortners.Add("*.sendgrid.net");
 
